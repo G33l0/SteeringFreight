@@ -99,7 +99,7 @@
                     <div class="flex justify-between gap-4"><dt>Sunday</dt><dd>{{ setting('contact.hours_sunday') }}</dd></div>
                 </dl>
                 @if ($note = setting('contact.hours_note'))
-                    <p class="mt-3 text-xs text-ink-500">{{ $note }}{{ ($tz = setting('contact.timezone')) ? ' ('.$tz.')' : '' }}</p>
+                    <p class="mt-3 text-xs text-ink-500">{{ ($tz = setting('contact.timezone')) ? rtrim($note, '.').' ('.$tz.').' : $note }}</p>
                 @endif
             </div>
 

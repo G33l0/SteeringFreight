@@ -48,9 +48,10 @@
             <p class="mt-3 text-ink-600">{{ setting('home.services_intro') }}</p>
         </div>
 
-        <div class="mt-10 grid gap-px overflow-hidden rounded border border-ink-100 bg-ink-100 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-10 grid gap-px overflow-hidden rounded border border-ink-100 bg-white sm:grid-cols-2 lg:grid-cols-3">
             @forelse ($services as $service)
-                <a href="{{ route('services.show', $service) }}" class="group flex flex-col bg-white p-6 transition hover:bg-ink-50">
+                <a href="{{ route('services.show', $service) }}"
+                   class="group flex flex-col bg-white p-6 outline outline-ink-100 transition hover:bg-ink-50">
                     <x-icon :name="$service->icon" class="h-7 w-7 text-accent-600" />
                     <h3 class="mt-4 font-display text-lg font-semibold">{{ $service->title }}</h3>
                     <p class="mt-2 flex-1 text-sm leading-relaxed text-ink-600">{{ $service->summary }}</p>

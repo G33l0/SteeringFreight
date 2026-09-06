@@ -78,7 +78,7 @@
                 <div class="flex justify-between gap-4"><dt>Sunday</dt><dd>{{ setting('contact.hours_sunday') }}</dd></div>
             </dl>
             @if ($note = setting('contact.hours_note'))
-                <p class="mt-2 text-xs text-ink-400">{{ $note }}{{ ($tz = setting('contact.timezone')) ? ' ('.$tz.')' : '' }}</p>
+                <p class="mt-2 text-xs text-ink-400">{{ ($tz = setting('contact.timezone')) ? rtrim($note, '.').' ('.$tz.').' : $note }}</p>
             @endif
 
             @if ($footerNote = setting('company.footer_note'))

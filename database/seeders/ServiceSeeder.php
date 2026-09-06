@@ -163,7 +163,7 @@ TEXT,
                     'image_alt' => $service['title'].' illustration',
                     'sort_order' => $index + 1,
                     'is_published' => true,
-                    'show_on_home' => $service['slug'] !== 'cargo-consolidation',
+                    'show_on_home' => true,
                     'meta_description' => $service['summary'],
                 ],
             );
