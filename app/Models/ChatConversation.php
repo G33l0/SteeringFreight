@@ -19,6 +19,8 @@ class ChatConversation extends Model
     protected $fillable = [
         'shipment_id',
         'customer_id',
+        'assigned_to',
+        'assigned_at',
         'subject',
         'contact_name',
         'contact_email',
@@ -40,6 +42,7 @@ class ChatConversation extends Model
         return [
             'status' => ConversationStatus::class,
             'last_message_at' => 'datetime',
+            'assigned_at' => 'datetime',
             'closed_at' => 'datetime',
             'unread_for_staff' => 'integer',
             'unread_for_customer' => 'integer',
@@ -65,6 +68,12 @@ class ChatConversation extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
     /** @return HasMany<ChatMessage, $this> */
     public function messages(): HasMany
     {
@@ -80,6 +89,41 @@ class ChatConversation extends Model
     public function isOpen(): bool
     {
         return $this->status === ConversationStatus::Open;
+    }
+
+    public function isAssigned(): bool
+    {
+        return $this->assigned_to !== null;
+    }
+
+    public function isAssignedTo(User $user): bool
+    {
+        return $this->assigned_to !== null && $this->assigned_to === $user->getKey();
+    }
+
+    /**
+     * Conversations a customer representative may work on: the ones given to
+     * them, and the ones nobody has picked up yet.
+     *
+     * @param  Builder<ChatConversation>  $query
+     */
+    public function scopeForRepresentative(Builder $query, User $user): void
+    {
+        $query->where(function (Builder $query) use ($user): void {
+            $query->where('assigned_to', $user->getKey())->orWhereNull('assigned_to');
+        });
+    }
+
+    /** @param Builder<ChatConversation> $query */
+    public function scopeAssignedTo(Builder $query, User $user): void
+    {
+        $query->where('assigned_to', $user->getKey());
+    }
+
+    /** @param Builder<ChatConversation> $query */
+    public function scopeUnassigned(Builder $query): void
+    {
+        $query->whereNull('assigned_to');
     }
 
     /** @param Builder<ChatConversation> $query */

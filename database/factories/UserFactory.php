@@ -25,8 +25,8 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'role' => UserRole::Agent,
-            'job_title' => 'Freight coordinator',
+            'role' => UserRole::Representative,
+            'job_title' => 'Customer representative',
             'is_active' => true,
             'remember_token' => Str::random(10),
         ];
@@ -37,9 +37,9 @@ class UserFactory extends Factory
         return $this->state(fn () => ['role' => UserRole::Administrator, 'job_title' => 'Operations director']);
     }
 
-    public function manager(): static
+    public function representative(): static
     {
-        return $this->state(fn () => ['role' => UserRole::Manager, 'job_title' => 'Operations manager']);
+        return $this->state(fn () => ['role' => UserRole::Representative, 'job_title' => 'Customer representative']);
     }
 
     public function inactive(): static

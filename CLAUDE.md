@@ -24,9 +24,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 
 ## Conventions
 
-- Authorisation goes through gates named `area.action` (`shipments.manage`,
-  `settings.manage`, …), resolved from `UserRole::permissions()`. Model level rules live
-  in `app/Policies`.
+- Two staff roles, in `UserRole`: `Administrator` (master admin, `['*']`) and
+  `Representative` (customer representative, chat only). Authorisation goes through gates
+  named `area.action` (`shipments.manage`, `settings.manage`, …) resolved from
+  `UserRole::permissions()`; model level rules live in `app/Policies`.
+- A representative may open a conversation only when it is assigned to them or unassigned;
+  `ChatConversationPolicy` is the single place that decides this, and
+  `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an
+  unassigned conversation claims it.
 - Every administrative write is recorded through `AuditLogger`. Never log credentials.
 - Customer facing text comes from the database: site settings, services, pages, FAQs and
   shipment records. Do not hard code company details in templates.

@@ -81,6 +81,12 @@ invented by the application: statuses, locations and descriptions are entered by
 53. [Database structure](#53-database-structure)
 54. [Preparing the application for production](#54-preparing-the-application-for-production)
 
+**User manual**
+
+55. [Staff roles at a glance](#55-staff-roles-at-a-glance)
+56. [Manual: master admin](#56-manual-master-admin)
+57. [Manual: customer representative](#57-manual-customer-representative)
+
 ---
 
 ## 1. Project overview
@@ -126,7 +132,11 @@ the FAQ entries, the reviews and all the company details are editable in the adm
   statuses that require a written explanation
 - Customers, documents, customer messages, quote requests, contact messages
 - Website content: services, pages, FAQ entries, client reviews
-- Site settings, staff accounts with roles, and an audit log of every administrative action
+- Site settings, staff accounts and an audit log of every administrative action
+- Two staff roles: a **master admin** who runs everything, and any number of **customer
+  representatives** who only answer customer messages. Each representative works from a
+  private dashboard showing the conversations assigned to them, with the tracking details
+  of the shipment each conversation is about
 
 **Getting it live**
 
@@ -379,11 +389,17 @@ Roles:
 
 | Role | Can do |
 | --- | --- |
-| `administrator` | Everything, including staff accounts, site settings and audit logs |
-| `manager` | Shipments, customers, messages, enquiries and all website content |
-| `agent` | Shipments, customers, documents, messages and enquiries |
+| `administrator` | **Master admin.** Everything: shipments, tracking updates, statuses, documents, customers, website content, settings, staff accounts and audit logs |
+| `representative` | **Customer representative.** Answers the customer conversations assigned to them, and nothing else. Cannot create or change a shipment |
 
-Further accounts are created in the panel under **Admin users**.
+Create a representative the same way:
+
+```sh
+php artisan portlane:create-admin --name="Ada Okonjo" --email="ada@example.com" --role=representative
+```
+
+Further accounts are created in the panel under **Admin users**, which is the usual way once
+the first master admin exists.
 
 ## 17. Running the development server
 
@@ -1022,9 +1038,11 @@ A normal working day looks like this:
    customer can download.
 6. **Audit logs** to see who changed what.
 
-Roles decide what each person sees. An agent runs shipments and messages, a manager also
-edits the website content, an administrator additionally manages staff accounts, site
-settings and the audit log.
+Roles decide what each person sees. A **master admin** gets everything above. A **customer
+representative** signs in to the same panel but lands on their own dashboard: the
+conversations assigned to them, the queue of customers nobody has picked up, and the
+tracking details of the shipment behind each one. They cannot open the shipment, customer,
+status, content, settings or audit screens at all — those addresses return 403.
 
 ## 42. Shipment workflow
 
@@ -1078,12 +1096,30 @@ looked the shipment up.
 ```
 Customer opens the tracking page → Contact shipping team
   → gives a name, email address and message (a file can be attached)
-Conversation is created against that shipment
+Conversation is created against that shipment, unassigned
   → a copy goes to your internal notification address
-Staff reply from Messages in the admin panel
-  → the customer sees the reply on the tracking page, and gets an email telling them so
+A representative picks it up, or replies to it, which assigns it to them
+  → from then on it is theirs, and other representatives cannot open it
+  → later customer messages also go to that representative's own email address
+They reply from Messages, with the shipment's tracking details beside the thread
+  → the customer sees the reply on the tracking page and gets an email telling them so
 Conversation is closed when the question is answered, and reopens if the customer writes again
 ```
+
+**Who can see which conversation**
+
+| | Master admin | Customer representative |
+| --- | --- | --- |
+| Conversations assigned to them | Yes | Yes |
+| Conversations nobody has picked up | Yes | Yes, and can pick them up |
+| Conversations assigned to somebody else | Yes | No — 403 |
+| Reassign a conversation | Yes | No |
+| Close or reopen | Any conversation | Their own |
+| Start a conversation from a shipment | Yes | No |
+
+A representative can handle as many customers as you like at once; each conversation carries
+its own shipment, so a single person can be answering a customer about a container in
+Rotterdam and another about an air consignment in Lagos in the same session.
 
 The tracking page checks for new messages on a timer rather than holding a socket open, so
 it runs on ordinary shared hosting with nothing extra installed. Two settings control it,
@@ -1194,17 +1230,24 @@ intact while removing it from the dropdowns.
 
 ## 50. Adding staff accounts
 
-**Admin users → New account**: name, email, job title, role and a password.
+**Admin users → New account**: name, email, job title, role and a password. Create as many
+accounts as you need; there is no limit.
 
 | Role | Access |
 | --- | --- |
-| Administrator | Everything, including staff accounts, site settings and audit logs |
-| Manager | Shipments, customers, messages, enquiries and all website content |
-| Agent | Shipments, customers, documents, messages and enquiries |
+| Master Admin | Everything: shipments, tracking updates, statuses, documents, customers, quotes, contact messages, website content, settings, staff accounts, audit logs, and every conversation |
+| Customer Representative | Customer messages only: the conversations assigned to them plus the unassigned queue, with read only tracking details for each. No shipment, customer, content, settings or audit access |
+
+A normal setup is one master admin (you) and one account per person answering customers.
 
 Rules the application enforces: nobody can change their own role or deactivate their own
-account, the last active administrator cannot be removed, and deactivating an account signs
-that person out immediately. Passwords are hashed and are never written to the audit log.
+account, the last active master admin cannot be removed, deactivating an account signs that
+person out immediately, and a representative cannot open a conversation that belongs to
+another representative. Passwords are hashed and are never written to the audit log.
+
+To take somebody off the desk, either deactivate their account (they are signed out and
+cannot sign back in) or reassign their open conversations first from **Messages**, so
+nothing is left sitting with an account nobody is using.
 
 Staff can change their own name, email and password under **Your profile**. Somebody who has
 forgotten their password uses **Forgot password** on the login screen, which needs working
@@ -1291,6 +1334,131 @@ Work through this in order:
 10. Check `https://yourdomain/robots.txt` and `https://yourdomain/sitemap.xml` return what you
     expect, and that `/admin` is not indexable.
 
+
+---
+
+## 55. Staff roles at a glance
+
+| | Master Admin | Customer Representative |
+| --- | --- | --- |
+| Create and edit shipments | Yes | No |
+| Add, edit or delete tracking updates | Yes | No |
+| Change tracking statuses | Yes | No |
+| Upload and delete documents | Yes | No |
+| Customers, quotes, contact messages | Yes | No |
+| Website content, settings, staff, audit log | Yes | No |
+| Read the conversations assigned to them | Yes | Yes |
+| Read unassigned conversations and pick them up | Yes | Yes |
+| Read a conversation assigned to somebody else | Yes | No |
+| Reply to a customer | Yes | Yes, on their own conversations |
+| Reassign a conversation | Yes | No |
+| See the shipment behind a conversation | Yes, and can edit it | Read only summary |
+
+Both roles sign in at the same address, `/admin`. What they see afterwards is different: the
+master admin lands on the operations dashboard, a representative lands on their own
+conversation dashboard.
+
+## 56. Manual: master admin
+
+**Signing in.** `/admin/login` with your email and password. Five wrong attempts in a minute
+locks the form briefly. Use **Forgot password** if you need a reset link (mail must be
+configured).
+
+**Setting the business up.** Work through the *Before you go live* checklist on the
+dashboard: contact details, registered name, the routes you operate, mail, legal details,
+legal review, sample data and debug mode. Each item links to the screen that fixes it.
+
+**Creating a shipment.**
+
+1. **Shipments → New shipment.**
+2. Assign the customer: pick a saved customer, or type the contact name, email and phone.
+3. Enter the origin and destination, and the current location if it is already known.
+4. Enter the cargo: description, packages, weight, dimensions, and the container, vessel,
+   voyage, air waybill or flight numbers that apply. Leave the rest blank.
+5. Set the estimated departure, arrival and delivery.
+6. Choose the opening status, normally *Booking Confirmed*.
+7. Leave the tracking number empty so one is generated, then **Create shipment**.
+
+The shipment page opens with **View tracking page** and **Add tracking update** at the top.
+
+**Recording progress.** On the shipment, use **Add tracking update**: status, location, date
+and time, the wording the customer reads, and an internal note if you need one. Tick or
+untick:
+
+- *Show on the tracking page* — untick to record something for staff only.
+- *Move the shipment to this status* — updates the current status and location.
+- *Email the customer* — sends an update if that status is set to notify.
+
+An exception status (Delayed, Customs Hold, Damaged Cargo …) cannot be saved without a
+written explanation, so a customer never sees a red status with no reason.
+
+**Documents.** Upload on the shipment page, choosing *Visible to the customer* or *Internal
+only*. Customer-visible files appear on the tracking page; internal files never leave the
+admin panel.
+
+**Customer messages.** **Messages** shows every conversation, with three views: all, assigned
+to me, and waiting to be picked up. Open one to read the thread, reply, and see the tracking
+details beside it. Use **Assign to** to hand it to a representative, or set it back to the
+unassigned queue. Close a conversation when it is finished; it reopens by itself if the
+customer writes again.
+
+**Adding staff.** **Admin users → New account**, role *Customer Representative* for someone
+who only answers customers, or *Master Admin* for another full administrator. Give them the
+password directly; they can change it under **Your profile**.
+
+**Watching the desk.** The dashboard shows unread message counts, recent conversations,
+recent tracking updates and recent quote requests. **Audit logs** records every
+administrative action with who did it, when and from which address.
+
+## 57. Manual: customer representative
+
+**What you can do.** Answer the customers assigned to you, and pick up customers who have
+written in and have nobody handling them. You can see the tracking details for each
+conversation so you can answer accurately. You cannot create or change shipments, tracking
+updates or statuses — if something needs correcting on the file, tell the master admin.
+
+**Signing in.** `/admin/login` with the email and password you were given. Change your
+password under **Your profile** the first time you sign in.
+
+**Your dashboard.** Signing in lands you on **My conversations**:
+
+- **My open conversations** — how many customers you are currently handling.
+- **Unread for me** — messages waiting for your reply.
+- **Waiting to be picked up** — customers nobody has claimed yet.
+- **Handled in total** — everything ever assigned to you.
+
+Below that: your conversations on the left, the waiting queue on the right. Every row shows
+the customer's name, their tracking number and the shipment's current status, so you know
+what the conversation is about before you open it.
+
+**Picking up a customer.** In the waiting list, press **Pick up**. The conversation becomes
+yours and disappears from everyone else's queue. Replying to an unassigned conversation picks
+it up automatically.
+
+**Answering.** Open the conversation. You will see:
+
+- the whole thread, oldest first, with your replies on the right;
+- the reply box, where you can attach a PDF, image or spreadsheet;
+- **Shipment** — tracking number, status, route, current location, shipping method,
+  estimated delivery and the customer's name, read only;
+- **Latest tracking updates** — the last few entries recorded by the operations desk;
+- a link to the customer's own tracking page, so you can see exactly what they see.
+
+Write the reply and press **Send reply**. The customer sees it on their tracking page within
+a few seconds and gets an email telling them a reply is waiting.
+
+**Handling several customers.** There is no limit. Each conversation carries its own
+shipment, so you can be answering one customer about a container and another about an air
+consignment at the same time. The **Messages** screen lists them all, with filters for
+*assigned to me*, *waiting to be picked up*, open and closed.
+
+**Finishing.** Press **Close conversation** when the question is answered. If the customer
+writes again, it reopens automatically and comes back to you.
+
+**What to escalate.** Anything that needs the shipment file changed — a wrong delivery date,
+a missing document, a status that does not match reality — goes to the master admin. You can
+tell the customer what the file currently says, but only the master admin can change it.
+
 ---
 
 ## Running the tests
@@ -1305,6 +1473,12 @@ events and exception rules, customer chat and staff replies, authorisation betwe
 private document access, quote requests, the contact form, review publishing, notification
 sending, the launch checklist, brand colour publishing, legal placeholder substitution, the
 service artwork fallback, and the settings, tracking number and content formatting helpers.
+
+The role split has its own coverage: a representative cannot reach the shipment, status,
+customer, content, settings or audit screens; cannot open or reply to a conversation
+belonging to another representative; picks up an unassigned conversation by replying to it;
+sees only their own conversations and the waiting queue on their dashboard; and only a master
+admin can reassign.
 
 ## Licence
 

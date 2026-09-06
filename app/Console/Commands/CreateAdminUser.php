@@ -21,9 +21,9 @@ class CreateAdminUser extends Command
                             {--name= : Full name of the administrator}
                             {--email= : Email address used to sign in}
                             {--password= : Password (you will be prompted if omitted)}
-                            {--role=administrator : administrator, manager or agent}';
+                            {--role=administrator : administrator (master admin) or representative (customer representative)}';
 
-    protected $description = 'Create an administrator account for the admin panel';
+    protected $description = 'Create a master admin or customer representative account for the admin panel';
 
     public function handle(AuditLogger $audit): int
     {
@@ -60,7 +60,7 @@ class CreateAdminUser extends Command
 
         $audit->record('user.created', $user, "Created admin user {$user->name} from the console", ['role' => $role], $user);
 
-        $this->components->info("Administrator {$user->email} created. Sign in at ".route('admin.login'));
+        $this->components->info("{$user->role->label()} {$user->email} created. Sign in at ".route('admin.login'));
 
         return self::SUCCESS;
     }

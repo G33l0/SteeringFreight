@@ -14,11 +14,18 @@ use App\Models\Shipment;
 use App\Models\ShipmentEvent;
 use App\Models\ShipmentStatus;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        // Customer representatives get their own dashboard: the conversations
+        // they are handling, and the ones still waiting to be picked up.
+        if (! $request->user()->hasPermission('shipments.view')) {
+            return $this->representativeDashboard($request);
+        }
+
         $statuses = ShipmentStatus::query()->get(['id', 'name', 'slug', 'category', 'is_final']);
 
         $exceptionIds = $statuses->where('category', StatusCategory::Exception)->pluck('id');
@@ -50,6 +57,40 @@ class DashboardController extends Controller
             'recentConversations' => ChatConversation::with('shipment')->latest('last_message_at')->limit(6)->get(),
             'recentQuotes' => QuoteRequest::latest('id')->limit(6)->get(),
             'recentActivity' => AuditLog::with('user')->latest('id')->limit(8)->get(),
+        ]);
+    }
+
+    /**
+     * The private dashboard a customer representative sees.
+     */
+    private function representativeDashboard(Request $request): View
+    {
+        $user = $request->user();
+
+        $mine = ChatConversation::query()
+            ->with(['shipment.status', 'latestMessage'])
+            ->assignedTo($user)
+            ->orderByDesc('last_message_at')
+            ->limit(15)
+            ->get();
+
+        $unassigned = ChatConversation::query()
+            ->with(['shipment.status', 'latestMessage'])
+            ->unassigned()
+            ->open()
+            ->orderByDesc('last_message_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.representative-dashboard', [
+            'mine' => $mine,
+            'unassigned' => $unassigned,
+            'counts' => [
+                'assigned_open' => ChatConversation::assignedTo($user)->open()->count(),
+                'unread' => (int) ChatConversation::assignedTo($user)->sum('unread_for_staff'),
+                'waiting' => ChatConversation::unassigned()->open()->count(),
+                'handled' => ChatConversation::assignedTo($user)->count(),
+            ],
         ]);
     }
 }

@@ -152,6 +152,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('messages', [ConversationController::class, 'index'])->name('messages.index');
         Route::get('messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
         Route::post('messages/{conversation}/reply', [ConversationController::class, 'reply'])->name('messages.reply');
+        Route::post('messages/{conversation}/assign', [ConversationController::class, 'assign'])->name('messages.assign');
+        Route::post('messages/{conversation}/claim', [ConversationController::class, 'claim'])->name('messages.claim');
         Route::post('messages/{conversation}/close', [ConversationController::class, 'close'])->name('messages.close');
         Route::post('messages/{conversation}/reopen', [ConversationController::class, 'reopen'])->name('messages.reopen');
         Route::get('messages/{conversation}/attachments/{message}', [ConversationController::class, 'attachment'])->name('messages.attachment');

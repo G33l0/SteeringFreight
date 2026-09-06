@@ -6,6 +6,7 @@ use App\Models\ChatConversation;
 use App\Models\Shipment;
 use App\Models\ShipmentDocument;
 use App\Models\User;
+use App\Policies\ChatConversationPolicy;
 use App\Policies\ShipmentDocumentPolicy;
 use App\Policies\ShipmentPolicy;
 use App\Policies\UserPolicy;
@@ -40,7 +41,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Unread badge in the admin sidebar.
         View::composer('components.layouts.admin', function ($view): void {
-            $view->with('unreadMessages', ChatConversation::sum('unread_for_staff') ?: null);
+            $user = auth()->user();
+
+            $unread = match (true) {
+                $user === null => 0,
+                $user->hasPermission('chat.manage') => ChatConversation::sum('unread_for_staff'),
+                $user->hasPermission('chat.view') => ChatConversation::forRepresentative($user)->sum('unread_for_staff'),
+                default => 0,
+            };
+
+            $view->with('unreadMessages', $unread ?: null);
         });
 
         ResetPassword::createUrlUsing(fn (object $notifiable, string $token) => route('admin.password.reset', [
@@ -56,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function registerGates(): void
     {
+        Gate::policy(ChatConversation::class, ChatConversationPolicy::class);
         Gate::policy(Shipment::class, ShipmentPolicy::class);
         Gate::policy(ShipmentDocument::class, ShipmentDocumentPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
@@ -65,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             'customers.view', 'customers.manage',
             'statuses.view', 'statuses.manage',
             'documents.view', 'documents.manage',
-            'chat.view', 'chat.reply', 'chat.manage',
+            'chat.view', 'chat.reply', 'chat.manage', 'chat.assign',
             'quotes.view', 'quotes.manage',
             'contact.view', 'contact.manage',
             'reviews.view', 'reviews.manage',

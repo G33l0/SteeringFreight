@@ -53,6 +53,12 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    /** @return HasMany<ChatConversation, $this> */
+    public function assignedConversations(): HasMany
+    {
+        return $this->hasMany(ChatConversation::class, 'assigned_to');
+    }
+
     public function hasPermission(string $ability): bool
     {
         if (! $this->is_active) {
@@ -67,6 +73,15 @@ class User extends Authenticatable
     public function isAdministrator(): bool
     {
         return $this->role === UserRole::Administrator && $this->is_active;
+    }
+
+    /**
+     * A customer representative only answers messages; they never see the
+     * shipment screens.
+     */
+    public function isRepresentative(): bool
+    {
+        return $this->role === UserRole::Representative;
     }
 
     /**

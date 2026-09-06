@@ -69,11 +69,11 @@ class ReviewManagementTest extends TestCase
         $this->get(route('reviews'))->assertOk()->assertSee('Sample content');
     }
 
-    public function test_an_agent_cannot_publish_reviews(): void
+    public function test_a_representative_cannot_publish_reviews(): void
     {
         $review = Review::factory()->unpublished()->create();
 
-        $this->actingAs($this->agent())
+        $this->actingAs($this->representative())
             ->post(route('admin.reviews.publish', $review))
             ->assertForbidden();
 

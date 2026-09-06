@@ -58,11 +58,12 @@ class LaunchChecklistTest extends TestCase
         $this->assertFalse(LaunchChecklist::hasSampleData());
     }
 
-    public function test_an_agent_does_not_see_the_checklist(): void
+    public function test_a_representative_does_not_see_the_checklist(): void
     {
-        $this->actingAs($this->agent())
+        $this->actingAs($this->representative())
             ->get(route('admin.dashboard'))
             ->assertOk()
+            ->assertSee('My conversations')
             ->assertDontSee('Before you go live');
     }
 }

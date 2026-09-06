@@ -30,7 +30,7 @@ class UserController extends Controller
         $this->authorize('create', User::class);
 
         return view('admin.users.create', [
-            'staff' => new User(['role' => UserRole::Agent, 'is_active' => true]),
+            'staff' => new User(['role' => UserRole::Representative, 'is_active' => true]),
             'roles' => UserRole::cases(),
         ]);
     }

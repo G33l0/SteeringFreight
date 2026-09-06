@@ -262,7 +262,7 @@
                     </ul>
                 @endif
 
-                @can('chat.reply')
+                @can('create', \App\Models\ChatConversation::class)
                     <div x-data="{ open: false }" class="border-t border-ink-100 p-4 sm:p-5">
                         <button type="button" class="btn btn-outline btn-sm" @click="open = ! open">Message the customer</button>
 

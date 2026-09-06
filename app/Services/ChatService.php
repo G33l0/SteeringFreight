@@ -154,6 +154,28 @@ class ChatService
         $conversation->forceFill(['unread_for_customer' => 0])->save();
     }
 
+    /**
+     * Hand a conversation to a member of staff, or return it to the unassigned
+     * queue by passing null.
+     */
+    public function assign(ChatConversation $conversation, ?User $assignee, User $actor): void
+    {
+        $conversation->forceFill([
+            'assigned_to' => $assignee?->getKey(),
+            'assigned_at' => $assignee ? now() : null,
+        ])->save();
+
+        $this->audit->record(
+            $assignee ? 'chat.assigned' : 'chat.unassigned',
+            $conversation->shipment,
+            $assignee
+                ? "Assigned the conversation with {$conversation->contact_name} to {$assignee->name}"
+                : "Returned the conversation with {$conversation->contact_name} to the unassigned queue",
+            ['conversation_id' => $conversation->getKey(), 'assigned_to' => $assignee?->getKey()],
+            $actor,
+        );
+    }
+
     public function close(ChatConversation $conversation, User $user): void
     {
         $conversation->forceFill([
@@ -229,12 +251,17 @@ class ChatService
 
     private function notifyStaff(ChatConversation $conversation, ChatMessage $message): void
     {
-        $address = $this->settings->string('notifications.admin_email');
+        $addresses = collect([
+            // The representative handling the conversation, when there is one.
+            $conversation->assignee?->email,
+            $this->settings->string('notifications.admin_email'),
+        ])->filter(fn (?string $address) => $address !== null
+            && filter_var($address, FILTER_VALIDATE_EMAIL) !== false)
+            ->unique()
+            ->values();
 
-        if ($address === '' || ! filter_var($address, FILTER_VALIDATE_EMAIL)) {
-            return;
+        foreach ($addresses as $address) {
+            Notification::route('mail', $address)->notify(new NewCustomerMessage($conversation, $message));
         }
-
-        Notification::route('mail', $address)->notify(new NewCustomerMessage($conversation, $message));
     }
 }

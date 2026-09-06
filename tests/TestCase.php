@@ -27,9 +27,9 @@ abstract class TestCase extends BaseTestCase
         return User::factory()->administrator()->create($attributes);
     }
 
-    protected function agent(array $attributes = []): User
+    protected function representative(array $attributes = []): User
     {
-        return User::factory()->create(['role' => UserRole::Agent] + $attributes);
+        return User::factory()->create(['role' => UserRole::Representative] + $attributes);
     }
 
     protected function trackingStatus(string $slug): ShipmentStatus
