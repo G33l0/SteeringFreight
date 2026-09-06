@@ -40,6 +40,19 @@
                                 </div>
                             @endif
                         </x-form.field>
+                    @elseif ($definition['type'] === \App\Support\SettingDefinitions::TYPE_COLOUR)
+                        <x-form.field :name="$field" :label="$definition['label']" :help="$definition['help'] ?? null" :optionalHint="false">
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="{{ $field }}_picker" value="{{ $current ?: '#000000' }}"
+                                       class="h-10 w-14 cursor-pointer rounded border border-ink-200 bg-white p-1"
+                                       aria-label="{{ $definition['label'] }} colour picker"
+                                       oninput="document.getElementById('{{ $field }}').value = this.value">
+                                <input type="text" id="{{ $field }}" name="{{ $field }}" value="{{ $current }}"
+                                       maxlength="7" pattern="#[0-9a-fA-F]{6}" placeholder="#0c1f2e"
+                                       class="input max-w-40 font-mono uppercase"
+                                       oninput="document.getElementById('{{ $field }}_picker').value = this.value">
+                            </div>
+                        </x-form.field>
                     @elseif ($definition['type'] === \App\Support\SettingDefinitions::TYPE_JSON)
                         <x-form.field :name="$field" :label="$definition['label']" :help="$definition['help'] ?? null" :optionalHint="false">
                             <textarea id="{{ $field }}" name="{{ $field }}" rows="6" maxlength="8000" class="textarea font-mono text-sm">{{ is_array($current) ? collect($current)->map(fn ($row) => ($row['title'] ?? '').' | '.($row['body'] ?? ''))->implode("\n") : $current }}</textarea>

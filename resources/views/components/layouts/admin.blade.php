@@ -9,7 +9,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $title }} — {{ company_name() }} admin</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32.png') }}" sizes="32x32" type="image/png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-styles />
 </head>
 <body class="min-h-screen bg-ink-50 antialiased">
 <div x-data="{ nav: false }" class="lg:flex">
@@ -19,9 +21,12 @@
     <aside :class="nav ? 'translate-x-0' : '-translate-x-full'"
            class="fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto bg-ink-950 px-3 py-4 transition-transform lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0">
         <div class="flex items-center justify-between px-2 pb-4">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-white">
-                <x-brand-mark class="h-7 w-7 text-white" />
-                <span class="font-display text-sm font-semibold">{{ company_name() }}</span>
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 text-white" aria-label="{{ company_name() }} dashboard">
+                <x-brand-mark tone="light" class="h-8 w-8 shrink-0 text-white" />
+                @php [$brandLead, $brandRest] = array_pad(explode(' ', trim(company_name()), 2), 2, ''); @endphp
+                <span class="truncate font-display text-sm tracking-tight">
+                    <span class="font-semibold text-white">{{ $brandLead }}</span>@if ($brandRest)<span class="font-normal text-ink-300"> {{ $brandRest }}</span>@endif
+                </span>
             </a>
             <button type="button" @click="nav = false" class="rounded p-1 text-ink-300 lg:hidden" aria-label="Close navigation">
                 <x-icon name="close" class="h-5 w-5" />

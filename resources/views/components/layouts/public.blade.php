@@ -17,14 +17,15 @@
     <meta property="og:title" content="{{ $metaTitle ?? company_name() }}">
     <meta property="og:description" content="{{ $metaDescription ?? setting('seo.meta_description') }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    @if ($ogImage = \App\Services\MediaService::url(setting('seo.og_image')))
-        <meta property="og:image" content="{{ $ogImage }}">
-        <meta name="twitter:card" content="summary_large_image">
-    @endif
+    <meta property="og:image" content="{{ \App\Services\MediaService::url(setting('seo.og_image')) ?? asset('assets/brand/portlane-og.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32.png') }}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-styles />
     @stack('head')
 </head>
 <body class="min-h-screen bg-white antialiased">

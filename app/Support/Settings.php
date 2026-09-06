@@ -56,6 +56,17 @@ class Settings
     }
 
     /** @return array<int, array<string, string>> */
+    /**
+     * A colour setting, guaranteed to be a six digit hex value.
+     */
+    public function colour(string $key, string $default = '#000000'): string
+    {
+        $value = trim((string) $this->get($key));
+
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1 ? $value : $default;
+    }
+
+    /** @return array<int, array<string, string>> */
     public function list(string $key): array
     {
         $value = $this->get($key);

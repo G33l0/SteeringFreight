@@ -12,8 +12,12 @@ with Laravel. It contains two halves:
 Everything a customer sees comes from the database. Nothing on the tracking page is
 invented by the application: statuses, locations and descriptions are entered by staff.
 
-> **The company name is a placeholder.** "Portlane Shipping" is set in **Site settings →
-> Company** and can be changed to your own name at any time without touching the code.
+> **Business details are configuration, not code.** "Portlane Shipping" is a working name set
+> in **Site settings → Company**. The application deliberately ships with no address, no
+> telephone number, no registration number and no operating lanes: those sections stay hidden
+> on the website until you enter real values, and the dashboard checklist tracks what is
+> still missing. The privacy policy and terms of service are plain-language drafts that need
+> your own legal adviser's review before launch.
 
 ---
 
@@ -59,6 +63,23 @@ invented by the application: statuses, locations and descriptions are entered by
 38. [Security checklist](#38-security-checklist)
 39. [Environment variable reference](#39-environment-variable-reference)
 40. [Project directory structure](#40-project-directory-structure)
+
+**Operating the application**
+
+41. [Admin workflow](#41-admin-workflow)
+42. [Shipment workflow](#42-shipment-workflow)
+43. [Tracking workflow](#43-tracking-workflow)
+44. [Chat workflow and configuration](#44-chat-workflow-and-configuration)
+45. [Changing the company branding](#45-changing-the-company-branding)
+46. [Replacing the logo](#46-replacing-the-logo)
+47. [Replacing the images](#47-replacing-the-images)
+48. [Changing the tracking prefix](#48-changing-the-tracking-prefix)
+49. [Changing the shipment statuses](#49-changing-the-shipment-statuses)
+50. [Adding staff accounts](#50-adding-staff-accounts)
+51. [Configuring notification emails](#51-configuring-notification-emails)
+52. [Removing the demo data](#52-removing-the-demo-data)
+53. [Database structure](#53-database-structure)
+54. [Preparing the application for production](#54-preparing-the-application-for-production)
 
 ---
 
@@ -107,6 +128,18 @@ the FAQ entries, the reviews and all the company details are editable in the adm
 - Website content: services, pages, FAQ entries, client reviews
 - Site settings, staff accounts with roles, and an audit log of every administrative action
 
+**Getting it live**
+
+- A "Before you go live" checklist on the admin dashboard that lists what a fresh
+  installation still needs: contact details, operating lanes, mail configuration, legal
+  details, sample data removal and debug mode
+- A complete brand kit in `public/assets/brand` (primary, horizontal and compact logo, on
+  light and dark, in SVG and PNG), a favicon set and a social sharing card
+- Original artwork for every service in `public/assets/illustrations`, used until you
+  upload your own photography
+- Brand colours, company details, page copy, tracking format, chat and upload limits all
+  editable from Site settings
+
 **Security**
 
 - Session authentication with password hashing, CSRF protection and login rate limiting
@@ -130,6 +163,11 @@ the FAQ entries, the reviews and all the company details are editable in the adm
 
 No paid services are required. There is no websocket server, no search service and no
 external chat provider.
+
+The logo, favicon set, social card and service artwork are original files that ship with the
+project in `public/assets`, so there is no stock imagery licence to buy and nothing to
+replace before launch — though you should swap the artwork for photographs of your own
+operation when you have them (section 47).
 
 ## 4. System requirements
 
@@ -307,8 +345,8 @@ This adds:
 
 When `APP_ENV` is anything other than `production`, it also adds **sample data**: six
 demonstration shipments, three sample customers, sample reviews and one sample enquiry.
-Every sample record is flagged in the database and labelled on the website, so it can never
-be mistaken for real customer data.
+Every sample record is flagged in the database and labelled on the website, and sample
+reviews are created unpublished, so none of it can be mistaken for real customer data.
 
 Add the sample data deliberately:
 
@@ -394,8 +432,10 @@ MAIL_FROM_NAME="${APP_NAME}"
 MAIL_ADMIN_ADDRESS="operations@example.com"
 ```
 
-Then in the admin panel under **Site settings → Notifications**, switch on
-*Send shipment update emails to customers* and set the internal notification address.
+Customer update emails are **off out of the box**. Once mail is working, go to
+**Site settings → Notifications**, set the internal notification address and switch on
+*Send shipment update emails to customers*. Section 51 covers the per status, per shipment
+and per update controls.
 
 Customer emails are only sent for statuses whose *Email the customer* box is ticked
 (**Tracking statuses**), and only when the shipment itself has notifications enabled. To
@@ -894,6 +934,8 @@ uploads stored outside the web root, and an audit log that never records credent
 | `MAIL_ENCRYPTION` | `tls` or `ssl` | `tls` |
 | `MAIL_FROM_ADDRESS` / `MAIL_FROM_NAME` | Sender shown to customers | `no-reply@example.com` |
 | `MAIL_ADMIN_ADDRESS` | Default address for internal alerts | `operations@example.com` |
+| `BRAND_PRIMARY_COLOUR` | Default primary colour before one is saved in settings | `#0c1f2e` |
+| `BRAND_ACCENT_COLOUR` | Default accent colour before one is saved in settings | `#ab4c17` |
 | `TRACKING_PREFIX` | Default tracking prefix before one is saved in settings | `PLS` |
 | `TRACKING_DIGITS` | Digits after the prefix | `8` |
 | `CHAT_POLL_INTERVAL` | Milliseconds between chat polls | `8000` |
@@ -925,7 +967,10 @@ portlane/
 │   ├── factories/                 Model factories used by the tests
 │   ├── migrations/                Schema
 │   └── seeders/                   Settings, statuses, services, pages, FAQ, demo data
-├── public/                        Document root: index.php, favicon.svg, build/
+├── public/                        Document root: index.php, build/, favicon set
+│   └── assets/
+│       ├── brand/                 Logo suite (SVG and PNG) and the social sharing card
+│       └── illustrations/         Service and port artwork used until photographs are added
 ├── resources/
 │   ├── css/app.css                Tailwind theme and shared component classes
 │   ├── js/                        Alpine bootstrap and the chat poller
@@ -933,7 +978,8 @@ portlane/
 │       ├── admin/                 Admin panel screens
 │       ├── components/            Blade components, including layouts/
 │       ├── errors/                403, 404, 419, 429, 500, 503
-│       └── public/                Website pages, including track/
+│       ├── public/                Website pages, including track/
+│       └── vendor/mail/           Branded email templates
 ├── routes/
 │   ├── console.php                Scheduled maintenance tasks
 │   └── web.php                    Every route in the application
@@ -942,8 +988,8 @@ portlane/
 │   ├── app/public/                Uploaded images (served through the storage link)
 │   └── logs/                      Application logs
 └── tests/
-    ├── Feature/Admin/             Authentication, shipments, documents, authorisation
-    ├── Feature/Public/            Tracking, chat, quotes, contact, website
+    ├── Feature/Admin/             Authentication, shipments, documents, authorisation, launch checklist
+    ├── Feature/Public/            Tracking, chat, quotes, contact, website, branding
     └── Unit/                      Tracking numbers, settings, content formatting
 ```
 
@@ -954,6 +1000,297 @@ portlane/
 `chat_messages`, `notifications`, `quote_requests`, `contact_messages`, `reviews`,
 `services`, `pages`, `faqs`, `site_settings`, `audit_logs`.
 
+
+---
+
+## 41. Admin workflow
+
+Sign in at `/admin`. The dashboard shows the shipment counts, anything unread, and — until
+you have finished setting the site up — a **Before you go live** checklist.
+
+A normal working day looks like this:
+
+1. **Shipments → New shipment.** Fill in the customer, route, cargo and dates, choose the
+   opening status and save. The tracking number is generated for you.
+2. **Add tracking update** as the cargo moves. Each update carries a status, a location, a
+   date, the wording the customer reads, and an optional internal note.
+3. **Messages** when a customer writes in from the tracking page. Replies appear on their
+   tracking page within a few seconds.
+4. **Quote requests** and **Contact messages** for new enquiries; mark them contacted,
+   quoted or closed as you work through them.
+5. **Documents** to see everything uploaded across all shipments, and which of them the
+   customer can download.
+6. **Audit logs** to see who changed what.
+
+Roles decide what each person sees. An agent runs shipments and messages, a manager also
+edits the website content, an administrator additionally manages staff accounts, site
+settings and the audit log.
+
+## 42. Shipment workflow
+
+```
+Create shipment
+  → assign the customer, origin, destination, cargo details and estimated delivery
+  → choose the opening status (usually Booking Confirmed)
+Save
+  → the tracking number is issued and the opening status is recorded as the first event
+Add tracking events as the shipment progresses
+  → Cargo Received → Processing → Shipped → In Transit → Arrived at Port
+  → Customs Clearance → Released → Out for Delivery → Delivered
+Customer follows it on the public tracking page and can message the team
+Staff reply from Messages
+Shipment reaches Delivered, then is archived when the file is closed
+```
+
+Notes worth knowing:
+
+- Setting an **exception** status (Delayed, Customs Hold, Damaged Cargo …) requires a written
+  explanation. The application will not save an unexplained exception, so a customer never
+  sees a red status with no reason.
+- **Show on the tracking page** can be unticked to record something for staff only.
+- **Move the shipment to this status** updates the current status and location; leave it
+  unticked to log a historic event without moving the shipment.
+- Editing or deleting an event recalculates the shipment's current status and progress from
+  what is left.
+- Archiving hides a shipment from the active list. It stays trackable and can be restored.
+
+## 43. Tracking workflow
+
+A customer opens `/track`, types the number from their booking confirmation — spacing, case
+and a missing hyphen are all accepted — and sees:
+
+- the tracking number, current status and last update time
+- the current location, estimated delivery and shipping method
+- a progress bar and the milestone timeline
+- the full public event history
+- the shipment details that are safe to show: route, cargo, packages, weight, container,
+  vessel, voyage, air waybill and flight numbers
+- documents you marked as visible to the customer
+- a message box that reaches the team handling the shipment
+
+No account is needed. What a tracking number never exposes: internal notes, internal-only
+events, internal documents, other customers' conversations, or anything from the admin panel.
+Customer-visible documents can only be downloaded in a browser session that has actually
+looked the shipment up.
+
+## 44. Chat workflow and configuration
+
+```
+Customer opens the tracking page → Contact shipping team
+  → gives a name, email address and message (a file can be attached)
+Conversation is created against that shipment
+  → a copy goes to your internal notification address
+Staff reply from Messages in the admin panel
+  → the customer sees the reply on the tracking page, and gets an email telling them so
+Conversation is closed when the question is answered, and reopens if the customer writes again
+```
+
+The tracking page checks for new messages on a timer rather than holding a socket open, so
+it runs on ordinary shared hosting with nothing extra installed. Two settings control it,
+under **Site settings → Tracking and chat**:
+
+- **Allow customers to message the team from the tracking page** — on by default.
+- **Chat refresh interval** — 8000 milliseconds by default. `CHAT_POLL_INTERVAL` in `.env`
+  sets the value used before anything is saved in the settings screen.
+
+Abuse protection: 10 messages a minute and 60 an hour per address, a hidden field that
+automated form fillers trip over, and attachment type and size validation. Access to a
+conversation needs both the tracking number and the session that created it.
+
+Moving to websockets later means replacing the fetch in `resources/js/chat.js` and the
+`messages` endpoint in `TrackingChatController` with a broadcast listener. The data model,
+the authorisation rules and the admin side stay as they are.
+
+## 45. Changing the company branding
+
+Everything below is in **Site settings**, and takes effect immediately. Nothing needs a
+rebuild.
+
+| What | Where |
+| --- | --- |
+| Company name, registered name, registration number, tagline, description, footer note | Company |
+| Logo | Company |
+| Address, telephone, email, operations email, hours, timezone | Contact and hours |
+| Homepage headings, hero copy, "why clients stay with us", lanes, closing call to action | Homepage |
+| Tracking prefix and length, tracking page copy, chat, upload limit | Tracking and chat |
+| Customer update emails, internal notification address, email sign off | Notifications |
+| Governing jurisdiction, trading conditions, retention period, legal contact | Legal |
+| Primary and accent colour | Brand |
+| Meta description, social card, indexing, social links | Search and social |
+
+**Brand colours.** Set a primary and an accent colour under **Brand**. The layouts publish
+them as CSS custom properties and the rest of the palette is derived from them, so the whole
+site follows without a front end rebuild. The shipped defaults are navy `#0c1f2e` and rust
+`#ab4c17`; they can also be set with `BRAND_PRIMARY_COLOUR` and `BRAND_ACCENT_COLOUR` in
+`.env`. Keep the accent dark enough for white button text to stay readable.
+
+**Legal placeholders.** Page copy can contain placeholders that are filled in from the
+settings when the page is rendered: `[[company.legal_name]]`, `[[company.registration_number]]`,
+`[[contact.email]]`, `[[contact.address]]`, `[[legal.jurisdiction]]`,
+`[[legal.trading_conditions]]`, `[[legal.retention_period]]`, `[[legal.contact_email]]`.
+A line whose placeholder has no value yet is left out of the page entirely, which is why the
+terms of service says nothing about a registration number until you enter one.
+
+## 46. Replacing the logo
+
+The application ships with a real logo, not a placeholder. The source files are in
+`public/assets/brand`:
+
+| File | Use |
+| --- | --- |
+| `portlane-logo-primary.svg` / `.png` | Stacked lockup for documents and print |
+| `portlane-logo-horizontal.svg` / `.png` | Website header, email header, light backgrounds |
+| `portlane-logo-horizontal-on-dark.svg` / `.png` | Dark backgrounds |
+| `portlane-mark.svg`, `portlane-mark-512.png` | Compact mark, app icons, avatars |
+| `portlane-mark-on-dark.svg` | Compact mark on dark backgrounds |
+| `portlane-og.svg` / `.png` | 1200 x 630 social sharing card |
+| `public/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` | Browser and device icons |
+
+To use your own logo: **Site settings → Company → Logo**, upload an SVG or PNG with a
+transparent background. It replaces the mark and wordmark in the header, footer, admin panel
+and email templates. The favicon and social card are static files — replace
+`public/favicon.svg`, `public/favicon-32.png`, `public/apple-touch-icon.png` and upload a new
+social image under **Search and social → Social sharing image**.
+
+## 47. Replacing the images
+
+The service pages and the about page use original artwork that ships with the application, in
+`public/assets/illustrations`. It is there so the site never shows an empty grey box, and it
+is meant to be replaced with photographs of your own operation.
+
+- **A service:** Services → edit → Image. The uploaded photograph replaces the artwork on the
+  services list and the service page. Landscape, at least 1200 pixels wide.
+- **The homepage hero:** Site settings → Homepage → Hero photograph. Wide, at least 1800
+  pixels; the built in harbour artwork is used until you upload one.
+- **The about page:** the illustration is referenced in `resources/views/public/about.blade.php`.
+
+Use photographs you own or have licensed. Do not take images from a search engine.
+
+## 48. Changing the tracking prefix
+
+**Site settings → Tracking and chat → Tracking number prefix** and **Digits after the prefix**.
+`PLS` and `8` produce `PLS-48291735`.
+
+The change applies to numbers generated from that point on. Numbers already issued are never
+rewritten, and the lookup accepts both old and new formats, so it is safe to change the prefix
+on a running system. `TRACKING_PREFIX` and `TRACKING_DIGITS` in `.env` set the values used
+before anything is saved in the settings screen.
+
+## 49. Changing the shipment statuses
+
+**Tracking statuses** in the admin panel. Two kinds:
+
+- **Milestones** make up the timeline the customer sees, ordered by their timeline position.
+  Fourteen ship with the application, from Booking Confirmed to Delivered.
+- **Exceptions** cover situations such as Delayed, Port Congestion, Customs Hold or Damaged
+  Cargo. Twelve ship with the application.
+
+For each status you can set the name, a different customer-facing label, the timeline
+position, the colour, the default wording, whether it is active, whether it completes the
+shipment, whether it emails the customer, and whether it requires a written explanation.
+
+A status that is in use cannot be deleted — switch it off instead, which keeps the history
+intact while removing it from the dropdowns.
+
+## 50. Adding staff accounts
+
+**Admin users → New account**: name, email, job title, role and a password.
+
+| Role | Access |
+| --- | --- |
+| Administrator | Everything, including staff accounts, site settings and audit logs |
+| Manager | Shipments, customers, messages, enquiries and all website content |
+| Agent | Shipments, customers, documents, messages and enquiries |
+
+Rules the application enforces: nobody can change their own role or deactivate their own
+account, the last active administrator cannot be removed, and deactivating an account signs
+that person out immediately. Passwords are hashed and are never written to the audit log.
+
+Staff can change their own name, email and password under **Your profile**. Somebody who has
+forgotten their password uses **Forgot password** on the login screen, which needs working
+mail settings.
+
+## 51. Configuring notification emails
+
+Customer update emails are **off** until you switch them on, so a half-configured
+installation cannot email your customers.
+
+1. Put your SMTP details in `.env` (section 19) and confirm mail works.
+2. **Site settings → Notifications**: set the internal notification address, the sign off,
+   and turn on *Send shipment update emails to customers*.
+3. **Tracking statuses**: tick *Email the customer* on the statuses that should notify. Cargo
+   Received, Shipped, Arrived at Port, Clearance Completed, Out for Delivery and Delivered are
+   ticked by default; Delayed, Customs Hold and Delivery Attempted are ticked among the
+   exceptions.
+4. Per shipment, the **Send status update emails for this shipment** box can be unticked for
+   a customer who does not want them, and a customer record can opt out of all of them.
+5. Per tracking update, **Email the customer** decides whether that particular update sends.
+
+Internal alerts (quote requests, contact messages, new customer chats) go to the internal
+notification address as soon as it is set, whether or not customer updates are on.
+
+## 52. Removing the demo data
+
+The demo seeder creates six sample shipments, three sample customers, sample reviews and one
+sample enquiry, all flagged in the database and labelled on the website. Sample reviews are
+created **unpublished**, so they never appear on the live site.
+
+```sh
+# Add it (development only; it also runs automatically when APP_ENV is not production)
+php artisan db:seed --class=Database\\Seeders\\DemoDataSeeder
+
+# Remove every sample record
+php artisan portlane:clear-demo-data
+```
+
+The dashboard checklist reports sample data until it is gone. Records your own staff created
+are never touched by the clear command.
+
+## 53. Database structure
+
+| Table | Holds |
+| --- | --- |
+| `users` | Staff accounts, role, active flag, last sign in, and columns reserved for two factor authentication |
+| `customers` | Customer records, contact details and notification preference |
+| `shipments` | The shipment file: tracking number, customer, route, cargo, transport references, dates, current status, progress, notes |
+| `shipment_statuses` | The configurable milestones and exceptions |
+| `shipment_events` | The tracking history, public wording and internal notes |
+| `shipment_documents` | Uploaded documents, their type, visibility and storage path |
+| `chat_conversations` | One conversation per customer enquiry, tied to a shipment |
+| `chat_messages` | Customer and staff messages, attachments and read state |
+| `quote_requests` | Website quotation requests and their handling status |
+| `contact_messages` | Website contact form messages |
+| `reviews` | Client reviews, published state and sample flag |
+| `services`, `pages`, `faqs` | Editable website content |
+| `site_settings` | Every editable setting, as key, value and type |
+| `audit_logs` | Who did what, when, from which address |
+| `notifications`, `jobs`, `cache`, `sessions`, `password_reset_tokens` | Laravel's own tables |
+
+Foreign keys link shipments to customers and statuses, events and documents to shipments, and
+conversations to shipments; deleting a shipment removes its events, documents and
+conversations with it. Indexes cover the tracking number (unique), status, customer, origin,
+destination, and the created and updated timestamps.
+
+## 54. Preparing the application for production
+
+Work through this in order:
+
+1. `.env`: `APP_ENV=production`, `APP_DEBUG=false`, the live `APP_URL`, database credentials,
+   SMTP details, `APP_TIMEZONE`.
+2. `php artisan key:generate` if the key is not set yet.
+3. `php artisan migrate --force` and `php artisan db:seed --force` (settings, statuses,
+   services, pages, FAQ — the demo data is skipped in production).
+4. `php artisan portlane:create-admin` and sign in.
+5. Work down the **Before you go live** checklist on the dashboard until it disappears:
+   contact details, registered name, operating lanes, mail, legal details, legal review,
+   sample data, debug mode.
+6. Replace the logo and imagery if you have your own, and set the brand colours.
+7. Send a test email, submit the quote and contact forms, and track a real shipment end to end.
+8. `php artisan storage:link`, then `config:cache`, `route:cache` and `view:cache`.
+9. Set up the cron entry (section 31) and backups (section 35).
+10. Check `https://yourdomain/robots.txt` and `https://yourdomain/sitemap.xml` return what you
+    expect, and that `/admin` is not indexable.
+
 ---
 
 ## Running the tests
@@ -962,11 +1299,12 @@ portlane/
 php artisan test
 ```
 
-The suite runs against an in-memory SQLite database and covers administrator
-authentication and rate limiting, shipment creation and unique tracking numbers, tracking
-lookups, tracking events and exception rules, customer chat and staff replies,
-authorisation between roles, private document access, quote requests, the contact form,
-review publishing, and the settings, tracking number and content formatting helpers.
+The suite runs against an in-memory SQLite database and covers administrator authentication
+and rate limiting, shipment creation and unique tracking numbers, tracking lookups, tracking
+events and exception rules, customer chat and staff replies, authorisation between roles,
+private document access, quote requests, the contact form, review publishing, notification
+sending, the launch checklist, brand colour publishing, legal placeholder substitution, the
+service artwork fallback, and the settings, tracking number and content formatting helpers.
 
 ## Licence
 

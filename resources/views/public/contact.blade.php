@@ -42,25 +42,53 @@
         </div>
 
         <aside class="space-y-6">
+            @php
+                $addressLines = collect([
+                    setting('contact.address_line_1'),
+                    setting('contact.address_line_2'),
+                    collect([setting('contact.city'), setting('contact.region'), setting('contact.postal_code')])->filter()->implode(', '),
+                    setting('contact.country'),
+                ])->filter();
+                $phone = setting('contact.phone');
+                $email = setting('contact.email');
+                $operationsEmail = setting('contact.operations_email') ?: $email;
+            @endphp
+
             <div class="border border-ink-100 bg-ink-50 p-6">
                 <h2 class="font-display text-base font-semibold">Operations desk</h2>
-                <address class="mt-3 space-y-1 text-sm not-italic text-ink-700">
-                    @foreach (collect([setting('contact.address_line_1'), setting('contact.address_line_2'), collect([setting('contact.city'), setting('contact.region'), setting('contact.postal_code')])->filter()->implode(', '), setting('contact.country')])->filter() as $line)
-                        <p>{{ $line }}</p>
-                    @endforeach
-                </address>
-                <div class="mt-4 space-y-1.5 text-sm">
-                    @if ($phone = setting('contact.phone'))
-                        <p class="inline-flex items-center gap-2"><x-icon name="phone" class="h-4 w-4 text-ink-400" />
-                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="font-medium text-accent-700 hover:underline">{{ $phone }}</a>
-                        </p>
-                    @endif
-                    @if ($email = setting('contact.email'))
-                        <p class="inline-flex items-center gap-2"><x-icon name="mail" class="h-4 w-4 text-ink-400" />
-                            <a href="mailto:{{ $email }}" class="font-medium text-accent-700 hover:underline">{{ $email }}</a>
-                        </p>
-                    @endif
-                </div>
+
+                @if ($addressLines->isNotEmpty())
+                    <address class="mt-3 space-y-1 text-sm not-italic text-ink-700">
+                        @foreach ($addressLines as $line)
+                            <p>{{ $line }}</p>
+                        @endforeach
+                    </address>
+                @endif
+
+                @if ($phone || $email || $operationsEmail)
+                    <div class="mt-4 space-y-1.5 text-sm">
+                        @if ($phone)
+                            <p class="inline-flex items-center gap-2"><x-icon name="phone" class="h-4 w-4 text-ink-400" />
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="font-medium text-accent-700 hover:underline">{{ $phone }}</a>
+                            </p>
+                        @endif
+                        @if ($email)
+                            <p class="inline-flex items-center gap-2"><x-icon name="mail" class="h-4 w-4 text-ink-400" />
+                                <a href="mailto:{{ $email }}" class="font-medium text-accent-700 hover:underline">{{ $email }}</a>
+                            </p>
+                        @endif
+                        @if ($operationsEmail && $operationsEmail !== $email)
+                            <p class="inline-flex items-center gap-2"><x-icon name="container" class="h-4 w-4 text-ink-400" />
+                                <a href="mailto:{{ $operationsEmail }}" class="font-medium text-accent-700 hover:underline">{{ $operationsEmail }}</a>
+                            </p>
+                        @endif
+                    </div>
+                @else
+                    <p class="mt-3 text-sm leading-relaxed text-ink-600">
+                        Use the form on this page and a coordinator will reply by email. Our published telephone and
+                        postal details will appear here once they are confirmed.
+                    </p>
+                @endif
             </div>
 
             <div class="border border-ink-100 p-6">
@@ -71,7 +99,7 @@
                     <div class="flex justify-between gap-4"><dt>Sunday</dt><dd>{{ setting('contact.hours_sunday') }}</dd></div>
                 </dl>
                 @if ($note = setting('contact.hours_note'))
-                    <p class="mt-3 text-xs text-ink-500">{{ $note }}</p>
+                    <p class="mt-3 text-xs text-ink-500">{{ $note }}{{ ($tz = setting('contact.timezone')) ? ' ('.$tz.')' : '' }}</p>
                 @endif
             </div>
 

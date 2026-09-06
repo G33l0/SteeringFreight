@@ -23,7 +23,7 @@ class ContentFormatter
 {
     public static function render(?string $content): HtmlString
     {
-        $content = trim((string) $content);
+        $content = trim(ContentTokens::apply((string) $content));
 
         if ($content === '') {
             return new HtmlString('');

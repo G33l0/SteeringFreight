@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\MediaService;
 use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -56,6 +57,42 @@ class Service extends Model
     public function scopeOrdered(Builder $query): void
     {
         $query->orderBy('sort_order')->orderBy('title');
+    }
+
+    /**
+     * Illustrations that ship with the application, used until the business
+     * uploads its own photography for a service.
+     *
+     * @var list<string>
+     */
+    public const BUNDLED_ILLUSTRATIONS = [
+        'sea-freight', 'air-freight', 'customs-clearance',
+        'warehousing', 'door-to-door-delivery', 'cargo-consolidation',
+    ];
+
+    /**
+     * The uploaded photograph if there is one, otherwise the bundled artwork.
+     */
+    public function imageUrl(): string
+    {
+        return MediaService::url($this->image_path) ?? $this->bundledIllustration();
+    }
+
+    public function bundledIllustration(): string
+    {
+        $slug = in_array($this->slug, self::BUNDLED_ILLUSTRATIONS, true) ? $this->slug : 'cargo-handling';
+
+        return asset("assets/illustrations/{$slug}.svg");
+    }
+
+    public function hasUploadedImage(): bool
+    {
+        return filled($this->image_path);
+    }
+
+    public function imageAlt(): string
+    {
+        return $this->image_alt ?: $this->title;
     }
 
     public function metaTitle(): string

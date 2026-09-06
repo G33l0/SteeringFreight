@@ -3,10 +3,8 @@
 
     <div class="mx-auto grid max-w-6xl gap-12 px-6 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:py-16">
         <div>
-            @if ($image = \App\Services\MediaService::url($service->image_path))
-                <img src="{{ $image }}" alt="{{ $service->image_alt ?: $service->title }}"
-                     class="mb-8 aspect-[16/9] w-full rounded object-cover" loading="lazy">
-            @endif
+            <img src="{{ $service->imageUrl() }}" alt="{{ $service->imageAlt() }}"
+                 class="mb-8 aspect-[4/3] w-full rounded object-cover sm:aspect-[16/9]" width="800" height="600">
 
             <div class="copy">
                 {!! \App\Support\ContentFormatter::render($service->description) !!}

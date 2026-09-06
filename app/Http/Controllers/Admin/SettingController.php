@@ -64,6 +64,7 @@ class SettingController extends Controller
                 SettingDefinitions::TYPE_INTEGER => ['nullable', 'integer', 'min:0', 'max:100000'],
                 SettingDefinitions::TYPE_TEXT => ['nullable', 'string', 'max:5000'],
                 SettingDefinitions::TYPE_JSON => ['nullable', 'string', 'max:8000'],
+                SettingDefinitions::TYPE_COLOUR => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 SettingDefinitions::TYPE_IMAGE => [
                     'nullable', 'image',
                     'max:'.(int) config('portlane.uploads.image_max_kb'),

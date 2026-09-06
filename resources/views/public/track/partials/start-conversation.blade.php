@@ -33,7 +33,7 @@
         </x-form.field>
 
         <x-form.field name="attachment" label="Attach a document"
-                      help="PDF, image or spreadsheet, up to {{ round(config('portlane.uploads.max_kb') / 1024) }} MB.">
+                      help="PDF, image or spreadsheet, up to {{ round(upload_max_kb() / 1024) }} MB.">
             <input type="file" id="attachment" name="attachment" class="input py-2 text-sm">
         </x-form.field>
 

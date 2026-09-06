@@ -68,7 +68,7 @@ class TrackingController extends Controller
             'conversation' => $conversation,
             'messages' => $conversation?->messages()->get() ?? collect(),
             'chatEnabled' => (bool) setting('tracking.chat_enabled', true) && ! $shipment->isArchived(),
-            'pollInterval' => (int) config('portlane.chat.poll_interval'),
+            'pollInterval' => chat_poll_interval(),
             'metaTitle' => 'Shipment '.$shipment->tracking_number.' — '.company_name(),
             'metaDescription' => 'Tracking information for shipment '.$shipment->tracking_number.'.',
             'robots' => 'noindex, nofollow',

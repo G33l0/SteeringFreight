@@ -7,6 +7,10 @@
         @endcan
     </x-slot:actions>
 
+    @can('settings.manage')
+        <x-admin.launch-checklist class="mb-6" />
+    @endcan
+
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <x-admin.stat label="Total shipments" :value="$counts['total']" :href="route('admin.shipments.index')" />
         <x-admin.stat label="Active" :value="$counts['active']" :href="route('admin.shipments.index')" />

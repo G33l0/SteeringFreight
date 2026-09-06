@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 148" width="240" height="148" role="img" aria-label="Portlane Shipping">
+  <g transform="translate(80 8) scale(2)">
+    <rect width="40" height="40" rx="7" fill="#0c1f2e"/>
+    <rect x="9" y="10" width="17" height="6" rx="1" fill="#ffffff" fill-opacity="0.92"/>
+    <path d="M9 19h16.5l5 3.5-5 3.5H9z" fill="#ffffff" fill-opacity="0.72"/>
+    <rect x="9" y="29" width="12" height="6" rx="1" fill="#ab4c17"/>
+  </g>
+  <text x="120" y="119" text-anchor="middle" font-family="'IBM Plex Sans','Inter','Helvetica Neue',Arial,sans-serif" font-size="25" letter-spacing="-0.4">
+    <tspan font-weight="600" fill="#0c1f2e">Portlane</tspan><tspan font-weight="400" fill="#446e8c"> Shipping</tspan>
+  </text>
+  <text x="120" y="138" text-anchor="middle" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-size="9.5" font-weight="600"
+        letter-spacing="2.6" fill="#ab4c17">FREIGHT FORWARDING</text>
+</svg>

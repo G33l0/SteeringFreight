@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img"
+     aria-label="A container vessel loaded at the quay beneath a gantry crane">
+  <rect width="800" height="600" fill="#eef2f5"/>
+  <rect y="392" width="800" height="208" fill="#e3eaef"/>
+
+  <!-- Gantry crane -->
+  <g stroke="#2c5878" stroke-width="12" fill="none" stroke-linecap="square">
+    <path d="M96 392V116h250v276"/>
+    <path d="M96 116H40l56-64h250l56 64h-56"/>
+    <path d="M210 116v104"/>
+  </g>
+  <rect x="182" y="212" width="56" height="44" fill="#ab4c17"/>
+
+  <!-- Quay edge -->
+  <rect y="386" width="800" height="12" fill="#2c5878"/>
+
+  <!-- Vessel -->
+  <g>
+    <path d="M52 468h700l-72 92H128z" fill="#0c1f2e"/>
+    <rect x="606" y="356" width="118" height="112" fill="#14304a"/>
+    <g fill="#cfdce5">
+      <rect x="628" y="380" width="24" height="20"/><rect x="668" y="380" width="24" height="20"/>
+      <rect x="628" y="416" width="24" height="20"/><rect x="668" y="416" width="24" height="20"/>
+    </g>
+
+    <g>
+      <rect x="96" y="410" width="96" height="56" fill="#ab4c17"/>
+      <rect x="198" y="410" width="96" height="56" fill="#2c5878"/>
+      <rect x="300" y="410" width="96" height="56" fill="#6d90a8"/>
+      <rect x="402" y="410" width="96" height="56" fill="#1d4160"/>
+      <rect x="504" y="410" width="96" height="56" fill="#2c5878"/>
+
+      <rect x="96" y="350" width="96" height="54" fill="#1d4160"/>
+      <rect x="198" y="350" width="96" height="54" fill="#6d90a8"/>
+      <rect x="300" y="350" width="96" height="54" fill="#ab4c17"/>
+      <rect x="402" y="350" width="96" height="54" fill="#2c5878"/>
+      <rect x="504" y="350" width="96" height="54" fill="#1d4160"/>
+
+      <rect x="198" y="292" width="96" height="52" fill="#2c5878"/>
+      <rect x="300" y="292" width="96" height="52" fill="#1d4160"/>
+      <rect x="402" y="292" width="96" height="52" fill="#6d90a8"/>
+    </g>
+  </g>
+
+  <g stroke="#a2bacb" stroke-width="8" stroke-linecap="round">
+    <path d="M70 584h180M290 584h200M530 584h200"/>
+  </g>
+</svg>

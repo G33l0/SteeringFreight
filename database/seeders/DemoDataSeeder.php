@@ -225,10 +225,12 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
+        // Sample reviews are created unpublished. Publish real client feedback
+        // only, from the Reviews screen.
         $reviews = [
-            ['Sample Review One', 'Demo Importers Ltd', 'Lagos, Nigeria', 5, 'Sample content for demonstration. Documents were checked before the container was stuffed, which meant clearance went through without a query.'],
-            ['Sample Review Two', 'Demo Trading BV', 'Rotterdam, Netherlands', 5, 'Sample content for demonstration. We always know who is handling the file and the tracking page matches what we are told on the phone.'],
-            ['Sample Review Three', 'Demo Manufacturing Co', 'Ningbo, China', 4, 'Sample content for demonstration. A vessel was rolled and we were told the same day, with a revised delivery date the next morning.'],
+            ['Sample Review One', 'Demo Importers Ltd (sample data)', 'Sample location', 5, 'Sample review used for layout only. Replace with real client feedback before publishing.'],
+            ['Sample Review Two', 'Demo Trading BV (sample data)', 'Sample location', 5, 'Sample review used for layout only. Replace with real client feedback before publishing.'],
+            ['Sample Review Three', 'Demo Manufacturing Co (sample data)', 'Sample location', 4, 'Sample review used for layout only. Replace with real client feedback before publishing.'],
         ];
 
         foreach ($reviews as $index => [$name, $company, $location, $rating, $body]) {
@@ -239,7 +241,7 @@ class DemoDataSeeder extends Seeder
                     'location' => $location,
                     'rating' => $rating,
                     'body' => $body,
-                    'is_published' => true,
+                    'is_published' => false,
                     'is_sample' => true,
                     'sort_order' => $index + 1,
                     'reviewed_on' => now()->subMonths($index + 1),

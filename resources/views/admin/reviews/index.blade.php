@@ -6,8 +6,9 @@
     </x-slot:actions>
 
     <p class="mb-5 max-w-3xl text-sm text-ink-600">
-        Only publish feedback a client has actually given you. Entries marked as sample content are labelled as such
-        wherever they appear on the website.
+        Only publish feedback a client has actually given you. The sample entries that come with the demo data are
+        created unpublished and are labelled as sample content wherever they appear, so they never read as genuine
+        client feedback.
     </p>
 
     <x-admin.panel compact>

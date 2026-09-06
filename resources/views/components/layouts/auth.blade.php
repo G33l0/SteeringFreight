@@ -8,15 +8,14 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $title }} — {{ company_name() }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32.png') }}" sizes="32x32" type="image/png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-styles />
 </head>
 <body class="min-h-screen bg-ink-950 antialiased">
     <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
         <div class="text-center">
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-white">
-                <x-brand-mark class="h-8 w-8 text-white" />
-                <span class="font-display text-lg font-semibold">{{ company_name() }}</span>
-            </a>
+            <x-logo tone="light" size="lg" />
             <p class="mt-2 text-sm text-ink-400">Staff area</p>
         </div>
 

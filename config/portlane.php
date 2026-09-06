@@ -16,16 +16,23 @@ return [
 
     'company' => [
         'name' => env('APP_NAME', 'Portlane Shipping'),
-        'legal_name' => env('APP_NAME', 'Portlane Shipping'),
-        'tagline' => 'Reliable freight handling from origin to destination.',
-        'email' => env('MAIL_ADMIN_ADDRESS', 'operations@example.com'),
-        'phone' => '',
-        'address_line_1' => '',
-        'address_line_2' => '',
-        'city' => '',
-        'region' => '',
-        'postal_code' => '',
-        'country' => '',
+        'tagline' => 'Freight handled with care, from origin to destination.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Brand colours
+    |--------------------------------------------------------------------------
+    |
+    | The starting palette. Both values are editable under Site settings, and
+    | the layouts publish them as CSS custom properties, so the colours can be
+    | changed without rebuilding the front end.
+    |
+    */
+
+    'brand' => [
+        'primary' => env('BRAND_PRIMARY_COLOUR', '#0c1f2e'),
+        'accent' => env('BRAND_ACCENT_COLOUR', '#ab4c17'),
     ],
 
     /*

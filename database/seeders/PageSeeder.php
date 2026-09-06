@@ -8,61 +8,67 @@ use Illuminate\Database\Seeder;
 /**
  * The pages linked from the site navigation and footer.
  *
- * The privacy and terms text is a workable starting point written in plain
- * language. Review both with your own legal adviser and edit them in the admin
- * panel before the site goes live.
+ * The privacy and terms copy is a plain-language draft, not legal advice. Both
+ * documents pull their business specific details from the site settings through
+ * [[placeholders]], and any line whose placeholder is still empty is left out
+ * of the rendered page. Have your own legal adviser review both before launch,
+ * then tick "Legal pages reviewed" under Site settings.
  */
 class PageSeeder extends Seeder
 {
     public function run(): void
     {
-        $company = (string) config('portlane.company.name');
-
         $pages = [
             [
                 'title' => 'About us',
                 'slug' => 'about',
-                'intro' => 'A freight forwarder and customs broker handling sea, air and road movements for importers and exporters.',
-                'body' => <<<TEXT
-{$company} arranges freight, clears customs and delivers cargo. We work with importers, exporters and manufacturers who need their consignments to arrive when they said they would, and who would rather deal with one company than four.
+                'intro' => 'A freight forwarder and customs broker moving sea, air and road cargo for importers and exporters.',
+                'body' => <<<'TEXT'
+[[company.name]] arranges freight, prepares customs entries and delivers cargo. We work with importers, exporters and manufacturers who need to know where a consignment is, what it will cost and when it will arrive.
 
-## How we work
+## How a booking is handled
 
 Every booking is assigned to a coordinator. That person books the space, prepares the documents, watches the schedule and answers the phone when you call about it. Nothing is handed to a different department at the border.
 
-## What that means in practice
+Before cargo moves we check the commercial invoice, the packing list and the transport document against each other. Most delays start as a document problem, and a document problem is far cheaper to fix while the goods are still in the warehouse.
 
-- We check documents before the cargo moves, because that is where most delays begin.
-- We record tracking milestones as the file progresses, so the tracking page reflects the real position.
-- When a schedule slips, we tell you what it means for the delivery date instead of waiting to be asked.
+## How cargo is handled
 
-## Services
+Consignments are checked against the packing list when we receive them, and anything that arrives short, damaged or badly packed is photographed and raised with you the same day. Cargo is packed for the journey it is actually making, secured for the leg it is on, and stored under cover while it waits.
 
-We handle sea freight, air freight, customs clearance, warehousing, door to door delivery and cargo consolidation. Most clients use more than one of them, which is the point: the same team sees the shipment from collection to delivery.
+## How you receive updates
 
-## Getting in touch
+When a booking is confirmed we issue a tracking number in the form PLS-48291735. Each stage of the movement is recorded against it by the coordinator handling the file: collection, departure, arrival, customs, release and delivery.
 
-Send us a route, a cargo description and an approximate weight and we will come back with a rate and a realistic transit time.
+You can open the tracking page at any time to see the current status, the last reported location, the delivery estimate and the full history. If something needs explaining, the same page has a message box that reaches the team working on your shipment rather than a general inbox.
+
+## Documentation and communication
+
+Two things decide whether a shipment runs smoothly: the paperwork being right before departure, and somebody telling you early when a schedule changes. We would rather call with an inconvenient update than let a delivery date slip quietly.
+
+## Talk to us
+
+Send us the origin, the destination, a description of the cargo and an approximate weight. We will come back with a rate and a realistic transit time.
 TEXT,
                 'is_system' => true,
             ],
             [
                 'title' => 'Privacy Policy',
                 'slug' => 'privacy-policy',
-                'intro' => 'How we collect, use and protect the personal information you give us.',
-                'body' => <<<TEXT
-This policy explains what personal information {$company} collects through this website, why we collect it and what we do with it.
+                'intro' => 'How we collect, use and protect the information you give us.',
+                'body' => <<<'TEXT'
+This policy explains what personal information [[company.legal_name]] collects through this website, why we collect it and what we do with it. It is written in plain language rather than legal drafting.
 
 ## Information we collect
 
 - **Contact and quotation forms.** Your name, email address, telephone number, company name and the shipment details you send us.
 - **Shipment records.** The contact details recorded against a shipment by our staff so that we can carry out the transport instruction.
-- **Messages.** Messages you send us from the tracking page, including any files you attach.
+- **Messages.** Messages you send from the tracking page, including any files you attach.
 - **Technical information.** The IP address a form was submitted from, used to limit abuse of the forms, and standard web server logs.
 
 ## Why we use it
 
-We use the information to prepare quotations, to carry out and account for transport instructions, to comply with customs and transport law, and to answer your questions. We do not sell it, and we do not use it for advertising.
+We use the information to prepare quotations, to carry out and account for transport instructions, to meet customs and transport requirements, and to answer your questions. We do not sell it and we do not use it for advertising.
 
 ## Who we share it with
 
@@ -70,7 +76,7 @@ Information is shared with the parties needed to move your cargo: carriers, airl
 
 ## How long we keep it
 
-Shipment records and the documents that go with them are kept for as long as customs and commercial law requires. Quotation requests and website enquiries are kept while they are useful for the enquiry and its follow up, and are removed after that.
+Shipment records and the documents that go with them are kept for [[legal.retention_period]]. Quotation requests and website enquiries are kept while they are useful for the enquiry and its follow up, and are removed after that.
 
 ## Cookies
 
@@ -78,11 +84,15 @@ This website sets a session cookie so that forms work correctly and so that a sh
 
 ## Your rights
 
-You can ask us what personal information we hold about you, ask for it to be corrected, or ask for it to be deleted where we are not required to keep it. Write to us using the contact details on the contact page.
+You can ask what personal information we hold about you, ask for it to be corrected, or ask for it to be deleted where we are not required to keep it.
+
+Write to us at [[legal.contact_email]].
+
+Our postal address is [[contact.address]].
 
 ## Changes
 
-If this policy changes, the updated version is published on this page with a new revision date.
+If this policy changes, the updated version is published on this page.
 TEXT,
                 'is_system' => true,
             ],
@@ -91,7 +101,7 @@ TEXT,
                 'slug' => 'terms-of-service',
                 'intro' => 'The terms that apply to this website and to freight services booked through it.',
                 'body' => <<<'TEXT'
-These terms apply to your use of this website and to enquiries and bookings made through it.
+These terms apply to your use of this website and to enquiries and bookings made with [[company.legal_name]].
 
 ## Using this website
 
@@ -111,11 +121,13 @@ You must tell us in advance if a consignment contains dangerous goods, goods req
 
 ## Liability
 
-Freight services are subject to the standard trading conditions and the international conventions that apply to the transport used, which limit liability by weight or by consignment. Copies of the applicable conditions are available on request. Nothing in these terms excludes liability that cannot be excluded by law.
+Freight services are subject to the standard trading conditions that apply to the booking and to the international conventions governing the transport used, which limit liability by weight or by consignment. Nothing in these terms excludes liability that cannot be excluded by law.
+
+Our bookings are subject to [[legal.trading_conditions]], a copy of which is available on request.
 
 ## Tracking information
 
-Tracking information is recorded by our staff as a shipment progresses and reflects the position known at the time of the update. It is provided for information and does not vary the terms of carriage.
+Tracking information is recorded by our staff as a shipment progresses and reflects the position known at the time of the update. It is provided for information and does not vary the terms of carriage. We do not guarantee a delivery date unless we have agreed one with you in writing.
 
 ## Payment
 
@@ -123,11 +135,15 @@ Invoices are payable in accordance with the credit terms agreed in writing. Wher
 
 ## Governing law
 
-The governing law and jurisdiction are those stated in the trading conditions applying to the booking.
+These terms are governed by the law of [[legal.jurisdiction]], and the courts of that jurisdiction have exclusive jurisdiction over any dispute.
+
+## The company
+
+[[company.legal_name]], registration number [[company.registration_number]].
 
 ## Contact
 
-Questions about these terms can be sent using the details on the contact page.
+Questions about these terms can be sent to [[contact.email]].
 TEXT,
                 'is_system' => true,
             ],

@@ -52,17 +52,24 @@
 
         <div>
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-white">Get in touch</h2>
-            <address class="mt-4 space-y-2 text-sm not-italic text-ink-300">
-                @foreach ($address as $line)
-                    <p>{{ $line }}</p>
-                @endforeach
-                @if ($phone)
-                    <p><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="hover:text-white">{{ $phone }}</a></p>
-                @endif
-                @if ($email)
-                    <p><a href="mailto:{{ $email }}" class="hover:text-white">{{ $email }}</a></p>
-                @endif
-            </address>
+            @if ($address->isNotEmpty() || $phone || $email)
+                <address class="mt-4 space-y-2 text-sm not-italic text-ink-300">
+                    @foreach ($address as $line)
+                        <p>{{ $line }}</p>
+                    @endforeach
+                    @if ($phone)
+                        <p><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="hover:text-white">{{ $phone }}</a></p>
+                    @endif
+                    @if ($email)
+                        <p><a href="mailto:{{ $email }}" class="hover:text-white">{{ $email }}</a></p>
+                    @endif
+                </address>
+            @else
+                <p class="mt-4 text-sm text-ink-300">
+                    <a href="{{ route('contact.create') }}" class="underline underline-offset-2 hover:text-white">Send us a message</a>
+                    and a coordinator will reply by email.
+                </p>
+            @endif
 
             <h2 class="mt-6 font-display text-sm font-semibold uppercase tracking-wide text-white">Business hours</h2>
             <dl class="mt-3 space-y-1 text-sm text-ink-300">
@@ -71,7 +78,11 @@
                 <div class="flex justify-between gap-4"><dt>Sunday</dt><dd>{{ setting('contact.hours_sunday') }}</dd></div>
             </dl>
             @if ($note = setting('contact.hours_note'))
-                <p class="mt-2 text-xs text-ink-400">{{ $note }}</p>
+                <p class="mt-2 text-xs text-ink-400">{{ $note }}{{ ($tz = setting('contact.timezone')) ? ' ('.$tz.')' : '' }}</p>
+            @endif
+
+            @if ($footerNote = setting('company.footer_note'))
+                <p class="mt-4 text-xs leading-relaxed text-ink-400">{{ $footerNote }}</p>
             @endif
         </div>
     </div>

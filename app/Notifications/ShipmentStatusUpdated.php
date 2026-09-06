@@ -52,7 +52,7 @@ class ShipmentStatusUpdated extends Notification implements ShouldQueue
 
         return $message
             ->action('View tracking page', route('track.show', $this->shipment->tracking_number))
-            ->salutation(setting('notifications.signature', 'Operations desk')."\n".company_name());
+            ->salutation(setting('notifications.signature', 'Operations desk'));
     }
 
     /** @return array<string, mixed> */

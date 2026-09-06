@@ -39,6 +39,6 @@ class StaffReplyPosted extends Notification implements ShouldQueue
             ->line(Str::limit($this->message->body, 300))
             ->action('Open the tracking page', route('track.show', $tracking))
             ->line('Replies are shown on the tracking page for this shipment.')
-            ->salutation(setting('notifications.signature', 'Operations desk')."\n".company_name());
+            ->salutation(setting('notifications.signature', 'Operations desk'));
     }
 }

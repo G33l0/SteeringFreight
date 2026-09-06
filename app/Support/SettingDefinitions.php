@@ -6,8 +6,13 @@ namespace App\Support;
  * The editable site settings, their group, input type and default value.
  *
  * Everything the public website prints that is not shipment data comes from
- * here, so the company name, contact details and homepage copy can be changed
- * without touching a template.
+ * here, so the company name, contact details, branding and page copy can be
+ * changed from the admin panel without touching a template.
+ *
+ * Values that would misrepresent the business if invented (address, telephone,
+ * registration number, operating lanes) ship empty. The website hides those
+ * sections until they are filled in, and the admin dashboard lists what is
+ * still missing.
  */
 class SettingDefinitions
 {
@@ -23,13 +28,17 @@ class SettingDefinitions
 
     public const TYPE_IMAGE = 'image';
 
+    public const TYPE_COLOUR = 'colour';
+
     /**
-     * @return array<string, array{group: string, type: string, label: string, help?: string, default: mixed, rows?: int}>
+     * @return array<string, array{group: string, type: string, label: string, help?: string, default: mixed, rows?: int, launch?: bool}>
      */
     public static function all(): array
     {
         return [
-            // Company identity.
+            // ---------------------------------------------------------------
+            // Company
+            // ---------------------------------------------------------------
             'company.name' => [
                 'group' => 'company', 'type' => self::TYPE_STRING, 'label' => 'Company name',
                 'help' => 'Shown in the header, footer, page titles and customer emails.',
@@ -37,57 +46,82 @@ class SettingDefinitions
             ],
             'company.legal_name' => [
                 'group' => 'company', 'type' => self::TYPE_STRING, 'label' => 'Registered name',
-                'help' => 'Used in the footer copyright line and legal pages.',
-                'default' => config('portlane.company.legal_name'),
+                'help' => 'The name the business is registered under. Used in the footer copyright line and the legal pages.',
+                'default' => config('portlane.company.name'),
+            ],
+            'company.registration_number' => [
+                'group' => 'company', 'type' => self::TYPE_STRING, 'label' => 'Company registration number',
+                'help' => 'Optional. Left empty until you have one; the legal pages leave the line out entirely when it is blank.',
+                'default' => null,
             ],
             'company.tagline' => [
                 'group' => 'company', 'type' => self::TYPE_STRING, 'label' => 'Tagline',
                 'default' => config('portlane.company.tagline'),
             ],
             'company.intro' => [
-                'group' => 'company', 'type' => self::TYPE_TEXT, 'label' => 'Short company description',
-                'help' => 'Two or three sentences. Used in the footer and on the about page.',
-                'default' => "We move sea, air and road freight for importers and exporters, and handle the customs work, warehousing and final delivery that goes with it.\n\nEvery booking is handled by a named coordinator, so there is always someone who knows the file.",
+                'group' => 'company', 'type' => self::TYPE_TEXT, 'label' => 'Company description',
+                'help' => 'Two or three sentences. Used in the footer, on the about page and in search results.',
+                'default' => "Portlane Shipping arranges sea and air freight, handles customs entries and delivers cargo to the receiver's door. Every booking is run by a named coordinator who prepares the documents, watches the schedule and keeps the tracking record current.",
                 'rows' => 4,
+            ],
+            'company.footer_note' => [
+                'group' => 'company', 'type' => self::TYPE_TEXT, 'label' => 'Footer note',
+                'help' => 'Optional line under the footer contact details, for a licence reference or a short disclaimer.',
+                'default' => null,
+                'rows' => 2,
             ],
             'company.logo' => [
                 'group' => 'company', 'type' => self::TYPE_IMAGE, 'label' => 'Logo',
-                'help' => 'Optional. PNG or SVG with a transparent background works best. If empty, the company name is used.',
+                'help' => 'Optional. Replaces the built in Portlane logo in the header, footer and admin panel. SVG or PNG with a transparent background.',
                 'default' => null,
             ],
 
-            // Contact details and opening hours.
+            // ---------------------------------------------------------------
+            // Contact and hours
+            // ---------------------------------------------------------------
             'contact.email' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'General email',
-                'default' => config('portlane.company.email'),
+                'help' => 'Published on the website. Leave empty until the address exists.',
+                'default' => null, 'launch' => true,
+            ],
+            'contact.operations_email' => [
+                'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Operations email',
+                'help' => 'Published on the contact page for booking and shipment queries. Falls back to the general email.',
+                'default' => null,
             ],
             'contact.phone' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Telephone',
-                'default' => config('portlane.company.phone'),
+                'help' => 'Published on the website. Leave empty until the line is live.',
+                'default' => null, 'launch' => true,
             ],
             'contact.address_line_1' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Address line 1',
-                'default' => config('portlane.company.address_line_1'),
+                'default' => null, 'launch' => true,
             ],
             'contact.address_line_2' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Address line 2',
-                'default' => config('portlane.company.address_line_2'),
+                'default' => null,
             ],
             'contact.city' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'City',
-                'default' => config('portlane.company.city'),
+                'default' => null, 'launch' => true,
             ],
             'contact.region' => [
-                'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Region / state',
-                'default' => config('portlane.company.region'),
+                'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'State or region',
+                'default' => null,
             ],
             'contact.postal_code' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Postal code',
-                'default' => config('portlane.company.postal_code'),
+                'default' => null,
             ],
             'contact.country' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Country',
-                'default' => config('portlane.company.country'),
+                'default' => null, 'launch' => true,
+            ],
+            'contact.timezone' => [
+                'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Operating timezone',
+                'help' => 'Shown beside the opening hours, for example "West Africa Standard Time". The timezone the application stores dates in is set with APP_TIMEZONE in the .env file.',
+                'default' => config('app.timezone'),
             ],
             'contact.hours_weekdays' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours, Monday to Friday',
@@ -111,23 +145,25 @@ class SettingDefinitions
                 'rows' => 3,
             ],
 
-            // Homepage copy.
+            // ---------------------------------------------------------------
+            // Homepage
+            // ---------------------------------------------------------------
             'home.hero_eyebrow' => [
                 'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Hero eyebrow',
                 'default' => 'Freight forwarding and customs brokerage',
             ],
             'home.hero_heading' => [
                 'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Hero heading',
-                'default' => 'Reliable freight handling from origin to destination',
+                'default' => 'Freight handled with care, from origin to destination',
             ],
             'home.hero_intro' => [
                 'group' => 'home', 'type' => self::TYPE_TEXT, 'label' => 'Hero paragraph',
-                'default' => 'We arrange sea and air freight, clear customs and deliver to the door. You get one point of contact and a tracking record you can check at any time.',
+                'default' => 'We arrange sea and air freight, prepare the customs paperwork and deliver to the door. You get one point of contact and a tracking record you can check at any time.',
                 'rows' => 3,
             ],
             'home.hero_image' => [
                 'group' => 'home', 'type' => self::TYPE_IMAGE, 'label' => 'Hero photograph',
-                'help' => 'Optional. A wide photograph of your own operation, port or fleet. Leave empty to use the built in harbour artwork.',
+                'help' => 'Optional. A wide photograph of your own operation, cargo or vehicles. Leave empty to use the built in harbour artwork.',
                 'default' => null,
             ],
             'home.services_heading' => [
@@ -136,21 +172,23 @@ class SettingDefinitions
             ],
             'home.services_intro' => [
                 'group' => 'home', 'type' => self::TYPE_TEXT, 'label' => 'Services section intro',
-                'default' => 'Five core services, run by the same team, so nothing is handed between agents at the border.',
+                'default' => 'Booking, documents, clearance and delivery are handled by the same team, so nothing is passed between agents at the border.',
                 'rows' => 2,
             ],
             'home.why_heading' => [
-                'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Why clients choose us, heading',
+                'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Why clients stay with us, heading',
                 'default' => 'Why clients stay with us',
             ],
             'home.why_points' => [
-                'group' => 'home', 'type' => self::TYPE_JSON, 'label' => 'Why clients choose us, points',
+                'group' => 'home', 'type' => self::TYPE_JSON, 'label' => 'Why clients stay with us, points',
                 'help' => 'One point per line, written as "Title | Explanation".',
                 'default' => [
-                    ['title' => 'One coordinator per file', 'body' => 'The person who books your shipment is the person who answers when you call about it.'],
-                    ['title' => 'Documents prepared early', 'body' => 'Customs paperwork is checked before the cargo moves, which is where most delays are avoided.'],
-                    ['title' => 'Tracking that is kept current', 'body' => 'Milestones are entered by the team handling the cargo, not generated automatically.'],
-                    ['title' => 'Straight answers on timing', 'body' => 'If a vessel rolls or a port is congested, we tell you what it means for your delivery date.'],
+                    ['title' => 'Clear shipment updates', 'body' => 'Milestones are entered by the coordinator handling the cargo, so the tracking page shows the real position rather than an automated guess.'],
+                    ['title' => 'Careful cargo handling', 'body' => 'Consignments are checked against the packing list on receipt, packed for the journey they are making, and photographed when something does not look right.'],
+                    ['title' => 'Responsive communication', 'body' => 'You can message the team from the tracking page and get an answer from the person who booked the shipment.'],
+                    ['title' => 'Straightforward documentation', 'body' => 'Invoices, packing lists and transport documents are checked against each other before the cargo moves, which is where most delays are avoided.'],
+                    ['title' => 'Flexible freight options', 'body' => 'Full container, groupage, air or road, quoted side by side so you can weigh cost against transit time.'],
+                    ['title' => 'Attention to delivery details', 'body' => 'Access, equipment and delivery windows are confirmed with the receiver before a vehicle is dispatched.'],
                 ],
             ],
             'home.destinations_heading' => [
@@ -159,18 +197,13 @@ class SettingDefinitions
             ],
             'home.destinations_intro' => [
                 'group' => 'home', 'type' => self::TYPE_TEXT, 'label' => 'Destinations intro',
-                'default' => 'Regular consolidations on the lanes below, and one-off bookings anywhere our carrier partners sail or fly.',
+                'default' => 'Ask us about the route you need and we will tell you the options, the transit time and what the paperwork requires.',
                 'rows' => 2,
             ],
             'home.destinations' => [
                 'group' => 'home', 'type' => self::TYPE_JSON, 'label' => 'Destination lanes',
-                'help' => 'One region per line, written as "Region | Ports and airports served".',
-                'default' => [
-                    ['title' => 'West Africa', 'body' => 'Lagos (Apapa, Tin Can), Tema, Abidjan, Cotonou, Douala'],
-                    ['title' => 'Europe', 'body' => 'Rotterdam, Antwerp, Felixstowe, Hamburg, Le Havre'],
-                    ['title' => 'Middle East and Asia', 'body' => 'Jebel Ali, Shanghai, Ningbo, Guangzhou, Mumbai (Nhava Sheva)'],
-                    ['title' => 'North America', 'body' => 'New York, Savannah, Houston, Montreal'],
-                ],
+                'help' => 'Empty on purpose: add only lanes you actually operate, one per line, written as "Region | Ports and airports served". The section stays hidden while this is empty.',
+                'default' => [], 'launch' => true,
             ],
             'home.cta_heading' => [
                 'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Closing call to action heading',
@@ -182,10 +215,12 @@ class SettingDefinitions
                 'rows' => 2,
             ],
 
-            // Tracking page.
+            // ---------------------------------------------------------------
+            // Tracking and chat
+            // ---------------------------------------------------------------
             'tracking.prefix' => [
                 'group' => 'tracking', 'type' => self::TYPE_STRING, 'label' => 'Tracking number prefix',
-                'help' => 'Used when new tracking numbers are generated, for example PLS-48291735. Existing numbers are not changed.',
+                'help' => 'Used when new tracking numbers are generated, for example PLS-48291735. Numbers already issued are never rewritten.',
                 'default' => config('portlane.tracking.prefix'),
             ],
             'tracking.digits' => [
@@ -206,17 +241,30 @@ class SettingDefinitions
                 'group' => 'tracking', 'type' => self::TYPE_BOOLEAN, 'label' => 'Allow customers to message the team from the tracking page',
                 'default' => true,
             ],
+            'tracking.chat_poll_interval' => [
+                'group' => 'tracking', 'type' => self::TYPE_INTEGER, 'label' => 'Chat refresh interval, in milliseconds',
+                'help' => 'How often an open tracking page checks for new replies. 8000 (eight seconds) is comfortable on shared hosting; lower it only if your host can take the traffic.',
+                'default' => config('portlane.chat.poll_interval'),
+            ],
+            'uploads.max_kb' => [
+                'group' => 'tracking', 'type' => self::TYPE_INTEGER, 'label' => 'Maximum upload size, in kilobytes',
+                'help' => 'Applies to shipment documents and chat attachments. Your hosting also enforces its own limit through upload_max_filesize.',
+                'default' => config('portlane.uploads.max_kb'),
+            ],
 
-            // Notifications.
+            // ---------------------------------------------------------------
+            // Notifications
+            // ---------------------------------------------------------------
             'notifications.enabled' => [
                 'group' => 'notifications', 'type' => self::TYPE_BOOLEAN, 'label' => 'Send shipment update emails to customers',
-                'help' => 'Emails are only sent for statuses that have notifications switched on, and only when the shipment has an email address.',
-                'default' => false,
+                'help' => 'Off until your mail settings are configured and tested. When on, emails are only sent for statuses that have notifications switched on under Tracking statuses, and only when the shipment has an email address.',
+                'default' => false, 'launch' => true,
             ],
             'notifications.admin_email' => [
                 'group' => 'notifications', 'type' => self::TYPE_STRING, 'label' => 'Internal notification address',
                 'help' => 'Quote requests, contact messages and new customer chats are copied to this address.',
                 'default' => config('portlane.notifications.admin_email'),
+                'launch' => true,
             ],
             'notifications.signature' => [
                 'group' => 'notifications', 'type' => self::TYPE_TEXT, 'label' => 'Email sign off',
@@ -224,15 +272,60 @@ class SettingDefinitions
                 'rows' => 2,
             ],
 
-            // Search engines and social cards.
+            // ---------------------------------------------------------------
+            // Legal
+            // ---------------------------------------------------------------
+            'legal.jurisdiction' => [
+                'group' => 'legal', 'type' => self::TYPE_STRING, 'label' => 'Governing jurisdiction',
+                'help' => 'The country or state whose law governs your contracts, for example "England and Wales". Used in the terms of service.',
+                'default' => null, 'launch' => true,
+            ],
+            'legal.trading_conditions' => [
+                'group' => 'legal', 'type' => self::TYPE_STRING, 'label' => 'Standard trading conditions',
+                'help' => 'The conditions your bookings are subject to, for example the local freight forwarders association conditions. Leave empty and the line is left out.',
+                'default' => null,
+            ],
+            'legal.retention_period' => [
+                'group' => 'legal', 'type' => self::TYPE_STRING, 'label' => 'Document retention period',
+                'help' => 'How long shipment records and customs documents are kept, for example "six years".',
+                'default' => 'the period required by customs and commercial law',
+            ],
+            'legal.contact_email' => [
+                'group' => 'legal', 'type' => self::TYPE_STRING, 'label' => 'Privacy and legal contact address',
+                'help' => 'Where data protection requests should be sent. Falls back to the general email address.',
+                'default' => null,
+            ],
+            'legal.reviewed' => [
+                'group' => 'legal', 'type' => self::TYPE_BOOLEAN, 'label' => 'Legal pages reviewed by our adviser',
+                'help' => 'The privacy policy and terms of service that ship with the application are plain-language drafts. Tick this once your own legal adviser has reviewed and approved them.',
+                'default' => false, 'launch' => true,
+            ],
+
+            // ---------------------------------------------------------------
+            // Brand
+            // ---------------------------------------------------------------
+            'brand.primary_colour' => [
+                'group' => 'brand', 'type' => self::TYPE_COLOUR, 'label' => 'Primary colour',
+                'help' => 'The dark colour used for headers, footers and the admin panel.',
+                'default' => config('portlane.brand.primary'),
+            ],
+            'brand.accent_colour' => [
+                'group' => 'brand', 'type' => self::TYPE_COLOUR, 'label' => 'Accent colour',
+                'help' => 'Used for buttons, links and highlights. Keep it dark enough for white text to stay readable.',
+                'default' => config('portlane.brand.accent'),
+            ],
+
+            // ---------------------------------------------------------------
+            // Search and social
+            // ---------------------------------------------------------------
             'seo.meta_description' => [
                 'group' => 'seo', 'type' => self::TYPE_TEXT, 'label' => 'Default meta description',
-                'default' => 'Sea freight, air freight, customs clearance, warehousing and door to door delivery, with shipment tracking for every booking.',
+                'default' => 'Sea freight, air freight, customs clearance, warehousing and door to door delivery, with shipment tracking on every booking.',
                 'rows' => 3,
             ],
             'seo.og_image' => [
                 'group' => 'seo', 'type' => self::TYPE_IMAGE, 'label' => 'Social sharing image',
-                'help' => 'Shown when a link to the site is posted on social platforms. 1200 x 630 pixels.',
+                'help' => 'Shown when a link to the site is posted on social platforms. 1200 x 630 pixels. Leave empty to use the built in Portlane card.',
                 'default' => null,
             ],
             'seo.indexable' => [
@@ -247,6 +340,10 @@ class SettingDefinitions
                 'group' => 'seo', 'type' => self::TYPE_STRING, 'label' => 'Facebook page URL',
                 'default' => null,
             ],
+            'seo.x_url' => [
+                'group' => 'seo', 'type' => self::TYPE_STRING, 'label' => 'X (Twitter) profile URL',
+                'default' => null,
+            ],
         ];
     }
 
@@ -257,8 +354,10 @@ class SettingDefinitions
             'company' => 'Company',
             'contact' => 'Contact and hours',
             'home' => 'Homepage',
-            'tracking' => 'Tracking',
+            'tracking' => 'Tracking and chat',
             'notifications' => 'Notifications',
+            'legal' => 'Legal',
+            'brand' => 'Brand',
             'seo' => 'Search and social',
         ];
     }
@@ -269,7 +368,17 @@ class SettingDefinitions
         return collect(self::all())->map(fn (array $definition) => $definition['default'])->all();
     }
 
-    /** @return array{group: string, type: string, label: string, help?: string, default: mixed, rows?: int}|null */
+    /**
+     * Settings a new installation should fill in before it goes live.
+     *
+     * @return array<string, array{group: string, type: string, label: string, help?: string, default: mixed, rows?: int, launch?: bool}>
+     */
+    public static function launchChecklist(): array
+    {
+        return collect(self::all())->filter(fn (array $definition) => $definition['launch'] ?? false)->all();
+    }
+
+    /** @return array{group: string, type: string, label: string, help?: string, default: mixed, rows?: int, launch?: bool}|null */
     public static function find(string $key): ?array
     {
         return self::all()[$key] ?? null;

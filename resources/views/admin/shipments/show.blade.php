@@ -188,7 +188,7 @@
                         </x-form.field>
 
                         <x-form.field name="file" label="File" :required="true"
-                                      help="PDF, image, Word, Excel or CSV up to {{ round(config('portlane.uploads.max_kb') / 1024) }} MB.">
+                                      help="PDF, image, Word, Excel or CSV up to {{ round(upload_max_kb() / 1024) }} MB.">
                             <input type="file" id="file" name="file" required class="input py-2 text-sm">
                         </x-form.field>
 

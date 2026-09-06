@@ -27,7 +27,7 @@ class ShipmentDocumentRequest extends FormRequest
             'file' => [
                 'required',
                 'file',
-                'max:'.(int) config('portlane.uploads.max_kb'),
+                'max:'.upload_max_kb(),
                 'mimes:'.implode(',', (array) config('portlane.uploads.document_mimes')),
             ],
         ];

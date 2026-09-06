@@ -4,6 +4,12 @@
         :title="$page?->title ?? 'About '.company_name()"
         :intro="$page?->intro ?? setting('company.tagline')" />
 
+    <div class="mx-auto max-w-6xl px-6 pt-10">
+        <img src="{{ asset('assets/illustrations/port-operations.svg') }}"
+             alt="Container terminal with gantry cranes, stacked containers and a berthed vessel"
+             class="w-full rounded object-cover" width="1200" height="500">
+    </div>
+
     <div class="mx-auto grid max-w-6xl gap-12 px-6 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:py-20">
         <div class="copy">
             @if ($page?->body)

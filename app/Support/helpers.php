@@ -25,3 +25,23 @@ if (! function_exists('company_name')) {
         return app(Settings::class)->string('company.name', (string) config('portlane.company.name'));
     }
 }
+
+if (! function_exists('upload_max_kb')) {
+    /**
+     * Largest accepted upload, in kilobytes. Editable in the admin settings.
+     */
+    function upload_max_kb(): int
+    {
+        return max(64, app(Settings::class)->int('uploads.max_kb', (int) config('portlane.uploads.max_kb')));
+    }
+}
+
+if (! function_exists('chat_poll_interval')) {
+    /**
+     * How often an open tracking page checks for new chat messages, in milliseconds.
+     */
+    function chat_poll_interval(): int
+    {
+        return max(2000, app(Settings::class)->int('tracking.chat_poll_interval', (int) config('portlane.chat.poll_interval')));
+    }
+}
