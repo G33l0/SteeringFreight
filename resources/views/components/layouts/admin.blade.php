@@ -17,7 +17,7 @@
     <div x-show="nav" x-cloak class="fixed inset-0 z-30 bg-ink-950/50 lg:hidden" @click="nav = false" aria-hidden="true"></div>
 
     <aside :class="nav ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto bg-ink-950 px-3 py-4 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0">
+           class="fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto bg-ink-950 px-3 py-4 transition-transform lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0">
         <div class="flex items-center justify-between px-2 pb-4">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-white">
                 <x-brand-mark class="h-7 w-7 text-white" />
