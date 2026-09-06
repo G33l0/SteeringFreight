@@ -1,0 +1,47 @@
+# Environment
+.env
+.env.backup
+.env.production
+/auth.json
+
+# Dependencies
+/node_modules
+/vendor
+
+# Laravel runtime
+/public/hot
+/public/storage
+/public/fonts-manifest.dev.json
+/storage/*.key
+/storage/pail
+/storage/app/private/*
+!/storage/app/private/.gitignore
+/storage/app/public/*
+!/storage/app/public/.gitignore
+*.log
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Local database
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Tests and tooling
+.phpunit.result.cache
+/.phpunit.cache
+
+# Editors and operating systems
+/.idea
+/.vscode
+/.zed
+/.nova
+/.fleet
+/.cursor
+/.codex
+.phpactor.json
+_ide_helper.php
+_ide_helper_models.php
+.DS_Store
+Thumbs.db
+Homestead.json
+Homestead.yaml
