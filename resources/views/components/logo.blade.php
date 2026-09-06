@@ -10,7 +10,7 @@
         <img src="{{ $logo }}" alt="{{ $name }}" class="h-9 w-auto">
     @else
         <x-brand-mark class="h-8 w-8 {{ $tone === 'light' ? 'text-white' : 'text-ink-800' }}" />
-        <span class="font-display text-lg font-semibold tracking-tight {{ $tone === 'light' ? 'text-white' : 'text-ink-950' }}">
+        <span class="whitespace-nowrap font-display text-base font-semibold tracking-tight sm:text-lg {{ $tone === 'light' ? 'text-white' : 'text-ink-950' }}">
             {{ $name }}
         </span>
     @endif

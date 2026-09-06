@@ -6,20 +6,24 @@
 
     <div class="mx-auto max-w-6xl space-y-px bg-ink-100 px-6 py-14 sm:py-16">
         @foreach ($services as $service)
-            <article class="grid gap-8 bg-white p-6 sm:p-8 lg:grid-cols-[1fr_1.6fr]">
-                <div>
-                    @if ($image = \App\Services\MediaService::url($service->image_path))
+            @php $image = \App\Services\MediaService::url($service->image_path); @endphp
+
+            <article @class([
+                'grid gap-8 bg-white p-6 sm:p-8',
+                'lg:grid-cols-[1fr_1.6fr]' => $image,
+            ])>
+                @if ($image)
+                    <div>
                         <img src="{{ $image }}" alt="{{ $service->image_alt ?: $service->title }}"
                              class="aspect-[4/3] w-full rounded object-cover" loading="lazy">
-                    @else
-                        <div class="flex aspect-[4/3] w-full items-center justify-center rounded bg-ink-50">
-                            <x-icon :name="$service->icon" class="h-12 w-12 text-ink-300" />
-                        </div>
-                    @endif
-                </div>
+                    </div>
+                @endif
 
                 <div>
-                    <h2 class="font-display text-xl font-semibold">
+                    <h2 class="flex items-center gap-3 font-display text-xl font-semibold">
+                        @unless ($image)
+                            <x-icon :name="$service->icon" class="h-6 w-6 shrink-0 text-accent-600" />
+                        @endunless
                         <a href="{{ route('services.show', $service) }}" class="hover:text-accent-700">{{ $service->title }}</a>
                     </h2>
                     <p class="mt-3 leading-relaxed text-ink-600">{{ $service->summary }}</p>

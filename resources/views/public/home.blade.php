@@ -16,9 +16,9 @@
             @if ($heroImage)
                 <img src="{{ $heroImage }}" alt="" class="h-full w-full object-cover opacity-40">
             @else
-                <x-art.harbour class="h-full w-full object-cover opacity-90" />
+                <x-art.harbour class="h-full w-full object-cover" />
             @endif
-            <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/85 to-ink-950/40"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/75 to-ink-950/10"></div>
         </div>
 
         <div class="mx-auto max-w-6xl px-6 py-20 sm:py-28">

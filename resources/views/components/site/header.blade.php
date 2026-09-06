@@ -65,6 +65,10 @@
                     Track Shipment
                 </a>
 
+                <a href="{{ route('track.index') }}" class="btn btn-primary btn-sm sm:hidden" aria-label="Track a shipment">
+                    <x-icon name="search" class="h-4 w-4" />
+                </a>
+
                 <button type="button" @click="open = ! open" class="rounded p-2 text-ink-700 lg:hidden"
                         :aria-expanded="open.toString()" aria-controls="mobile-nav" aria-label="Toggle navigation">
                     <x-icon name="menu" class="h-6 w-6" x-show="! open" />
