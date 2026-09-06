@@ -31,13 +31,19 @@ class QuoteRequestTest extends TestCase
     {
         $response = $this->post(route('quote.store'), [
             'name' => 'Ada Nwosu',
+            'company' => 'Nwosu Trading',
             'email' => 'ada@example.com',
             'phone' => '+234 000 000 0000',
-            'origin' => 'Shanghai, China',
-            'destination' => 'Lagos, Nigeria',
+            'origin_country' => 'China',
+            'origin_city' => 'Shanghai',
+            'destination_country' => 'Nigeria',
+            'destination_city' => 'Lagos',
             'shipping_method' => ShippingMethod::SeaFreightLcl->value,
+            'incoterm' => 'FOB',
             'cargo_type' => 'Kitchen equipment',
             'approximate_weight' => '850 kg',
+            'dimensions' => '9 cartons, 60 x 40 x 40 cm',
+            'goods_value' => 'USD 12,000',
             'package_count' => 9,
             'message' => 'Cargo will be ready in two weeks.',
         ]);
@@ -50,15 +56,47 @@ class QuoteRequestTest extends TestCase
         $this->assertSame(QuoteStatus::New, $quote->status);
         $this->assertStringStartsWith('QR-', $quote->reference);
 
+        // The structured route also fills the readable labels.
+        $this->assertSame('China', $quote->origin_country);
+        $this->assertSame('Shanghai, China', $quote->origin);
+        $this->assertSame('Lagos, Nigeria', $quote->destination);
+        $this->assertSame('FOB', $quote->incoterm);
+        $this->assertSame('USD 12,000', $quote->goods_value);
+
         Notification::assertSentOnDemand(QuoteRequestReceived::class);
     }
 
     public function test_the_quote_form_validates_its_input(): void
     {
         $this->post(route('quote.store'), ['name' => '', 'email' => 'not-an-email'])
-            ->assertSessionHasErrors(['name', 'email', 'origin', 'destination']);
+            ->assertSessionHasErrors(['name', 'email', 'origin_country', 'destination_country', 'cargo_type']);
 
         $this->assertSame(0, QuoteRequest::count());
+    }
+
+    public function test_the_country_must_come_from_the_list(): void
+    {
+        $this->post(route('quote.store'), [
+            'name' => 'Ada Nwosu',
+            'email' => 'ada@example.com',
+            'origin_country' => 'Wakanda',
+            'destination_country' => 'Nigeria',
+            'cargo_type' => 'Kitchen equipment',
+        ])->assertSessionHasErrors('origin_country');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    public function test_the_form_offers_countries_across_every_region(): void
+    {
+        $response = $this->get(route('quote.create'));
+
+        $response->assertOk();
+
+        foreach (['China', 'Japan', 'Singapore', 'India', 'United Arab Emirates', 'Vietnam',
+            'Indonesia', 'Kazakhstan', 'Nigeria', 'Brazil', 'Germany', 'United States'] as $country) {
+            $response->assertSee($country);
+        }
     }
 
     public function test_the_honeypot_field_blocks_automated_submissions(): void
@@ -66,8 +104,9 @@ class QuoteRequestTest extends TestCase
         $this->post(route('quote.store'), [
             'name' => 'Bot',
             'email' => 'bot@example.com',
-            'origin' => 'A',
-            'destination' => 'B',
+            'origin_country' => 'China',
+            'destination_country' => 'Nigeria',
+            'cargo_type' => 'Anything',
             'website' => 'http://spam.example.com',
         ])->assertSessionHasErrors('website');
 
@@ -98,8 +137,9 @@ class QuoteRequestTest extends TestCase
         $payload = [
             'name' => 'Ada Nwosu',
             'email' => 'ada@example.com',
-            'origin' => 'Shanghai',
-            'destination' => 'Lagos',
+            'origin_country' => 'China',
+            'destination_country' => 'Nigeria',
+            'cargo_type' => 'Kitchen equipment',
         ];
 
         for ($attempt = 0; $attempt < 3; $attempt++) {

@@ -35,6 +35,11 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 - Every administrative write is recorded through `AuditLogger`. Never log credentials.
 - Customer facing text comes from the database: site settings, services, pages, FAQs and
   shipment records. Do not hard code company details in templates.
+- Countries come from `App\Support\Countries` and are validated against it everywhere they
+  are entered, so a quote and a shipment for the same lane read identically.
+- Quote requests reach the dashboard and the operations mailbox at once. The alert email sets
+  reply-to to the customer, a quotation sent from the panel sets reply-to to the operations
+  address and is stored as a `QuoteReply`.
 - Never invent business facts. Address, telephone, registration number and operating lanes
   ship empty; the views hide those sections until they are filled in.
 - Brand colours are published as CSS custom properties from the settings, so the palette is

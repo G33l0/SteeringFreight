@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use App\Enums\ShippingMethod;
 use App\Models\Shipment;
 use App\Models\ShipmentStatus;
+use App\Support\Countries;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -37,9 +38,9 @@ class ShipmentRequest extends FormRequest
             'customer_email' => ['nullable', 'email:filter', 'max:180'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
 
-            'origin_country' => ['nullable', 'string', 'max:120'],
+            'origin_country' => ['nullable', 'string', 'max:120', Rule::in(Countries::names())],
             'origin_city' => ['nullable', 'string', 'max:120'],
-            'destination_country' => ['nullable', 'string', 'max:120'],
+            'destination_country' => ['nullable', 'string', 'max:120', Rule::in(Countries::names())],
             'destination_city' => ['nullable', 'string', 'max:120'],
             'current_location' => ['nullable', 'string', 'max:200'],
 

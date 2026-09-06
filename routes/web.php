@@ -166,6 +166,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('quotes', [AdminQuoteRequestController::class, 'index'])->name('quotes.index');
         Route::get('quotes/{quote}', [AdminQuoteRequestController::class, 'show'])->name('quotes.show');
         Route::put('quotes/{quote}', [AdminQuoteRequestController::class, 'update'])->name('quotes.update');
+        Route::post('quotes/{quote}/reply', [AdminQuoteRequestController::class, 'reply'])->name('quotes.reply');
 
         Route::get('contact-messages', [AdminContactMessageController::class, 'index'])->name('contact-messages.index');
         Route::get('contact-messages/{message}', [AdminContactMessageController::class, 'show'])->name('contact-messages.show');

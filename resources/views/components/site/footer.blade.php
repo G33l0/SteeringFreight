@@ -81,6 +81,17 @@
                 <p class="mt-2 text-xs text-ink-400">{{ ($tz = setting('contact.timezone')) ? rtrim($note, '.').' ('.$tz.').' : $note }}</p>
             @endif
 
+            @if (filled($extraDetails = settings()->list('contact.extra_details')))
+                <dl class="mt-4 space-y-1.5 text-sm text-ink-300">
+                    @foreach ($extraDetails as $detail)
+                        <div class="flex justify-between gap-4">
+                            <dt>{{ $detail['title'] ?? '' }}</dt>
+                            <dd class="text-right">{{ $detail['body'] ?? '' }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            @endif
+
             @if ($footerNote = setting('company.footer_note'))
                 <p class="mt-4 text-xs leading-relaxed text-ink-400">{{ $footerNote }}</p>
             @endif

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class QuoteRequest extends Model
@@ -24,9 +25,16 @@ class QuoteRequest extends Model
         'company',
         'origin',
         'destination',
+        'origin_country',
+        'origin_city',
+        'destination_country',
+        'destination_city',
         'shipping_method',
         'cargo_type',
         'approximate_weight',
+        'dimensions',
+        'incoterm',
+        'goods_value',
         'package_count',
         'ready_date',
         'message',
@@ -34,6 +42,7 @@ class QuoteRequest extends Model
         'internal_notes',
         'handled_by',
         'handled_at',
+        'replied_at',
         'ip_address',
     ];
 
@@ -47,15 +56,9 @@ class QuoteRequest extends Model
             'shipping_method' => ShippingMethod::class,
             'ready_date' => 'date',
             'handled_at' => 'datetime',
+            'replied_at' => 'datetime',
             'package_count' => 'integer',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (QuoteRequest $quote): void {
-            $quote->reference ??= static::generateReference();
-        });
     }
 
     public static function generateReference(): string
@@ -71,6 +74,42 @@ class QuoteRequest extends Model
     public function handler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    /** @return HasMany<QuoteReply, $this> */
+    public function replies(): HasMany
+    {
+        return $this->hasMany(QuoteReply::class)->orderBy('id');
+    }
+
+    /**
+     * Keep the free text route columns in step with the structured ones, so
+     * older records and searches keep working.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (QuoteRequest $quote): void {
+            $quote->reference ??= static::generateReference();
+            $quote->syncRouteLabels();
+        });
+
+        static::updating(fn (QuoteRequest $quote) => $quote->syncRouteLabels());
+    }
+
+    public function syncRouteLabels(): void
+    {
+        if (filled($this->origin_country) || filled($this->origin_city)) {
+            $this->origin = collect([$this->origin_city, $this->origin_country])->filter()->implode(', ');
+        }
+
+        if (filled($this->destination_country) || filled($this->destination_city)) {
+            $this->destination = collect([$this->destination_city, $this->destination_country])->filter()->implode(', ');
+        }
+    }
+
+    public function hasBeenReplied(): bool
+    {
+        return $this->replied_at !== null;
     }
 
     /** @param Builder<QuoteRequest> $query */

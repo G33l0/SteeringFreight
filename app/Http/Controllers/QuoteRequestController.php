@@ -6,6 +6,7 @@ use App\Enums\ShippingMethod;
 use App\Http\Requests\QuoteRequestFormRequest;
 use App\Models\QuoteRequest;
 use App\Notifications\QuoteRequestReceived;
+use App\Support\Countries;
 use App\Support\Settings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,9 @@ class QuoteRequestController extends Controller
     {
         return view('public.quote', [
             'methods' => ShippingMethod::options(),
+            'countries' => Countries::names(),
+            'frequentCountries' => Countries::frequentlyUsed(),
+            'incoterms' => ['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'],
             'metaTitle' => 'Request a quote — '.company_name(),
             'metaDescription' => 'Tell us the origin, destination and cargo details and we will come back with a rate and transit time.',
         ]);
@@ -36,6 +40,6 @@ class QuoteRequestController extends Controller
 
         return redirect()
             ->route('quote.create')
-            ->with('status', "Thank you. Your request has been logged as {$quote->reference} and a coordinator will reply by email.");
+            ->with('status', trim($settings->string('quotes.confirmation')).' Your reference is '.$quote->reference.'.');
     }
 }

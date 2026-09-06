@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\ShippingMethod;
 use App\Models\Shipment;
 use App\Services\TrackingNumberGenerator;
+use App\Support\Countries;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,9 +24,9 @@ class ShipmentFactory extends Factory
             'customer_email' => fake()->safeEmail(),
             'customer_phone' => fake()->numerify('+## ### ### ####'),
             'origin_city' => fake()->city(),
-            'origin_country' => fake()->country(),
+            'origin_country' => fake()->randomElement(Countries::names()),
             'destination_city' => fake()->city(),
-            'destination_country' => fake()->country(),
+            'destination_country' => fake()->randomElement(Countries::names()),
             'shipping_method' => fake()->randomElement(ShippingMethod::cases()),
             'cargo_description' => 'General cargo, palletised',
             'package_count' => fake()->numberBetween(1, 40),

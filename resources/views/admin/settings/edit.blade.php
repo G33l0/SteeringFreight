@@ -65,6 +65,12 @@
                         <x-form.field :name="$field" :label="$definition['label']" :help="$definition['help'] ?? null" :optionalHint="false">
                             <input type="number" id="{{ $field }}" name="{{ $field }}" value="{{ $current }}" min="0" class="input sm:max-w-40">
                         </x-form.field>
+                    @elseif ($key === 'contact.country')
+                        <x-form.field :name="$field" :label="$definition['label']" :help="$definition['help'] ?? null" :optionalHint="false">
+                            <x-form.country-select :name="$field" :value="$current"
+                                                   :countries="\App\Support\Countries::names()"
+                                                   :frequent="\App\Support\Countries::frequentlyUsed()" />
+                        </x-form.field>
                     @else
                         <x-form.field :name="$field" :label="$definition['label']" :help="$definition['help'] ?? null" :optionalHint="false">
                             <input type="text" id="{{ $field }}" name="{{ $field }}" value="{{ $current }}" maxlength="500" class="input">

@@ -89,6 +89,17 @@
                         postal details will appear here once they are confirmed.
                     </p>
                 @endif
+
+                @if (filled($extraDetails = settings()->list('contact.extra_details')))
+                    <dl class="mt-4 space-y-2 border-t border-ink-200 pt-4 text-sm">
+                        @foreach ($extraDetails as $detail)
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ $detail['title'] ?? '' }}</dt>
+                                <dd class="mt-0.5 text-ink-800">{{ $detail['body'] ?? '' }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                @endif
             </div>
 
             <div class="border border-ink-100 p-6">

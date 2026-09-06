@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Customer;
+use App\Support\Countries;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,7 +22,7 @@ class CustomerFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('+## ### ### ####'),
             'city' => fake()->city(),
-            'country' => fake()->country(),
+            'country' => fake()->randomElement(Countries::names()),
             'notifications_enabled' => true,
         ];
     }

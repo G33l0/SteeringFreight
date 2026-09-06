@@ -40,7 +40,9 @@
             </x-form.field>
 
             <x-form.field name="origin_country" label="Origin country">
-                <input type="text" id="origin_country" name="origin_country" value="{{ $value('origin_country') }}" maxlength="120" class="input">
+                <x-form.country-select name="origin_country" :value="$value('origin_country')"
+                                       :countries="\App\Support\Countries::names()"
+                                       :frequent="\App\Support\Countries::frequentlyUsed()" />
             </x-form.field>
 
             <x-form.field name="destination_city" label="Destination city">
@@ -48,7 +50,9 @@
             </x-form.field>
 
             <x-form.field name="destination_country" label="Destination country">
-                <input type="text" id="destination_country" name="destination_country" value="{{ $value('destination_country') }}" maxlength="120" class="input">
+                <x-form.country-select name="destination_country" :value="$value('destination_country')"
+                                       :countries="\App\Support\Countries::names()"
+                                       :frequent="\App\Support\Countries::frequentlyUsed()" />
             </x-form.field>
 
             <x-form.field name="current_location" label="Current location" class="sm:col-span-2"

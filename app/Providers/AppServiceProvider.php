@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Enums\ContactStatus;
+use App\Enums\QuoteStatus;
 use App\Models\ChatConversation;
+use App\Models\ContactMessage;
+use App\Models\QuoteRequest;
 use App\Models\Shipment;
 use App\Models\ShipmentDocument;
 use App\Models\User;
@@ -51,6 +55,14 @@ class AppServiceProvider extends ServiceProvider
             };
 
             $view->with('unreadMessages', $unread ?: null);
+
+            $view->with('newQuotes', $user?->hasPermission('quotes.view')
+                ? (QuoteRequest::where('status', QuoteStatus::New->value)->count() ?: null)
+                : null);
+
+            $view->with('newContactMessages', $user?->hasPermission('contact.view')
+                ? (ContactMessage::where('status', ContactStatus::New->value)->count() ?: null)
+                : null);
         });
 
         ResetPassword::createUrlUsing(fn (object $notifiable, string $token) => route('admin.password.reset', [

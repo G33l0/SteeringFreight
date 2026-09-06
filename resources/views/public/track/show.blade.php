@@ -224,6 +224,17 @@
                         <p><a href="mailto:{{ $email }}" class="font-medium text-accent-700 hover:underline">{{ $email }}</a></p>
                     @endif
                 </div>
+
+                @if (filled($extraDetails = settings()->list('contact.extra_details')))
+                    <dl class="mt-3 space-y-2 border-t border-ink-200 pt-3 text-sm">
+                        @foreach ($extraDetails as $detail)
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ $detail['title'] ?? '' }}</dt>
+                                <dd class="mt-0.5 text-ink-800">{{ $detail['body'] ?? '' }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                @endif
             </div>
 
             <div>

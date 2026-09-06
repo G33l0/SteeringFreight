@@ -80,12 +80,16 @@ invented by the application: statuses, locations and descriptions are entered by
 52. [Removing the demo data](#52-removing-the-demo-data)
 53. [Database structure](#53-database-structure)
 54. [Preparing the application for production](#54-preparing-the-application-for-production)
+55. [Quote requests: receiving and answering](#55-quote-requests-receiving-and-answering)
+56. [Adding more contact details](#56-adding-more-contact-details)
+57. [Managing the client reviews section](#57-managing-the-client-reviews-section)
+58. [The country list](#58-the-country-list)
 
 **User manual**
 
-55. [Staff roles at a glance](#55-staff-roles-at-a-glance)
-56. [Manual: master admin](#56-manual-master-admin)
-57. [Manual: customer representative](#57-manual-customer-representative)
+59. [Staff roles at a glance](#59-staff-roles-at-a-glance)
+60. [Manual: master admin](#60-manual-master-admin)
+61. [Manual: customer representative](#61-manual-customer-representative)
 
 ---
 
@@ -115,7 +119,10 @@ the FAQ entries, the reviews and all the company details are editable in the adm
 - Shipment tracking with a milestone timeline, progress bar, event history, shipment
   details and downloadable documents
 - Customer chat attached to the shipment, using lightweight polling
-- Quote request and contact forms with validation, rate limiting and a bot trap
+- A structured quote request form: contact details, route (country and city, chosen from a
+  full country list), preferred method and incoterm, then cargo type, weight, dimensions,
+  packages, commercial value and ready date
+- Contact form, both with validation, rate limiting and a bot trap
 - SEO: titles, meta descriptions, canonical URLs, Open Graph tags, `sitemap.xml`,
   `robots.txt`, semantic HTML and image alt text
 - Polished 403, 404, 419, 429, 500 and 503 pages
@@ -130,7 +137,11 @@ the FAQ entries, the reviews and all the company details are editable in the adm
   customer
 - Configurable tracking statuses: milestones with a timeline position, and exception
   statuses that require a written explanation
-- Customers, documents, customer messages, quote requests, contact messages
+- Customers, documents, customer messages and contact messages
+- Quote requests that arrive in the dashboard **and** the operations mailbox, and can be
+  answered from either: send a quotation from the admin panel with rate, transit time and
+  validity, kept on the record, or press Reply in webmail because the alert is addressed to
+  reply to the customer
 - Website content: services, pages, FAQ entries, client reviews
 - Site settings, staff accounts and an audit log of every administrative action
 - Two staff roles: a **master admin** who runs everything, and any number of **customer
@@ -1146,9 +1157,10 @@ rebuild.
 | --- | --- |
 | Company name, registered name, registration number, tagline, description, footer note | Company |
 | Logo | Company |
-| Address, telephone, email, operations email, hours, timezone | Contact and hours |
-| Homepage headings, hero copy, "why clients stay with us", lanes, closing call to action | Homepage |
+| Address, telephone, email, operations email, hours, timezone, additional contact details | Contact and hours |
+| Homepage headings, hero copy, "why clients stay with us", lanes, reviews heading and intro, closing call to action | Homepage |
 | Tracking prefix and length, tracking page copy, chat, upload limit | Tracking and chat |
+| Quote page copy, confirmation message, frequently shipped countries, default quotation text | Quote requests |
 | Customer update emails, internal notification address, email sign off | Notifications |
 | Governing jurisdiction, trading conditions, retention period, legal contact | Legal |
 | Primary and accent colour | Brand |
@@ -1301,7 +1313,8 @@ are never touched by the clear command.
 | `shipment_documents` | Uploaded documents, their type, visibility and storage path |
 | `chat_conversations` | One conversation per customer enquiry, tied to a shipment |
 | `chat_messages` | Customer and staff messages, attachments and read state |
-| `quote_requests` | Website quotation requests and their handling status |
+| `quote_requests` | Website quotation requests: contact, structured route, cargo details, status and handling |
+| `quote_replies` | Quotations sent to the customer from the admin panel, with rate, transit time and validity |
 | `contact_messages` | Website contact form messages |
 | `reviews` | Client reviews, published state and sample flag |
 | `services`, `pages`, `faqs` | Editable website content |
@@ -1337,7 +1350,105 @@ Work through this in order:
 
 ---
 
-## 55. Staff roles at a glance
+
+## 55. Quote requests: receiving and answering
+
+**What the customer fills in.** The form at `/quote` is in three parts:
+
+1. **Your details** — name, company, email and telephone.
+2. **Route** — collection country and city, delivery country and city, preferred shipping
+   method and incoterm. Countries come from a list of 190, with the ones you ship most often
+   at the top, so enquiries are recorded consistently instead of as free text.
+3. **Cargo** — type of goods, gross weight, number of packages, dimensions, commercial value,
+   cargo ready date and any notes.
+
+Only name, email, both countries and the type of goods are required; a customer who does not
+yet know the weight can still send the enquiry.
+
+**Where it goes.** Both at once:
+
+- **The dashboard.** It appears under **Quote requests** with a badge on the sidebar, is
+  counted on the dashboard, and gets a reference like `QR-260906-AQXD`.
+- **Your mailbox.** The full enquiry is emailed to the internal notification address set in
+  **Site settings → Notifications**.
+
+**Answering from the dashboard.** Open the request and use **Send a quotation**:
+
+- subject (pre-filled with the reference and the route);
+- currency, rate, transit time and validity, which appear as labelled figures in the email;
+- the message body, pre-filled with the standard wording from
+  **Site settings → Quote requests → Default text for a quotation reply**;
+- *Mark this request as quoted*, which is ticked by default.
+
+The quotation is emailed to the customer, kept on the record under **Quotations sent**, and
+written to the audit log. The customer's reply comes back to your operations address, because
+that is set as the reply-to.
+
+**Answering from webmail.** The alert email is addressed to reply to the customer, so pressing
+Reply in webmail answers them directly — useful on a phone. Replies sent that way are not
+recorded in the panel, so set the status to *Quoted* afterwards. The **Reply from webmail**
+button at the top of the request opens your mail client with the address and subject filled in.
+
+**Working through them.** The list filters by status, country, date and free text, and shows
+which requests have had a quotation sent and which are still waiting.
+
+## 56. Adding more contact details
+
+Beyond the address, telephone and email, you can publish any number of extra lines —
+a WhatsApp number, a branch office, an out of hours desk, a customs enquiries address.
+
+**Site settings → Contact and hours → Additional contact details**, one per line:
+
+```
+WhatsApp | +234 000 000 0000
+Lagos branch | 12 Wharf Road, Apapa
+Out of hours | duty desk, +234 111 111 1111
+```
+
+They appear immediately in three places: the contact page, the site footer, and the help panel
+on the shipment tracking page, so a customer chasing a delivery sees them where they already
+are. Remove a line and it disappears everywhere.
+
+## 57. Managing the client reviews section
+
+**Reviews** in the admin panel: create, edit, publish, unpublish and delete. Each entry has a
+client name, company, location, rating, the review itself, an optional photograph, a display
+order and a date.
+
+The heading and introduction shown above the reviews — on the homepage and at the top of the
+client reviews page — are editable under
+**Site settings → Homepage → Client reviews heading / intro**.
+
+Rules the application keeps to: nothing appears on the website until you publish it, the
+section is hidden entirely while no review is published, and anything flagged as sample
+content is labelled as such wherever it appears. Only publish feedback a client has actually
+given you.
+
+## 58. The country list
+
+Countries come from one list of 190 in `app/Support/Countries.php`, used by the quote form,
+the shipment screens, the customer records and the contact settings. It covers every region,
+including the Asian markets most freight moves through — China, Japan, South Korea, Taiwan,
+Hong Kong, Singapore, Malaysia, Thailand, Vietnam, Indonesia, the Philippines, India,
+Pakistan, Bangladesh, Sri Lanka, the Gulf states, Türkiye and Central Asia.
+
+Countries entered anywhere in the admin panel are validated against the list, so a shipment
+and a quote for the same lane always read the same way.
+
+**Putting your own lanes first.** **Site settings → Quote requests → Frequently shipped
+countries**, one per line, using the names exactly as they appear in the list:
+
+```
+China
+United Arab Emirates
+Netherlands
+Nigeria
+```
+
+Those appear in a **Frequently shipped** group above the full list on every country selector.
+Leave it empty and a sensible default set is used.
+
+## 59. Staff roles at a glance
 
 | | Master Admin | Customer Representative |
 | --- | --- | --- |
@@ -1358,7 +1469,7 @@ Both roles sign in at the same address, `/admin`. What they see afterwards is di
 master admin lands on the operations dashboard, a representative lands on their own
 conversation dashboard.
 
-## 56. Manual: master admin
+## 60. Manual: master admin
 
 **Signing in.** `/admin/login` with your email and password. Five wrong attempts in a minute
 locks the form briefly. Use **Forgot password** if you need a reset link (mail must be
@@ -1396,6 +1507,13 @@ written explanation, so a customer never sees a red status with no reason.
 only*. Customer-visible files appear on the tracking page; internal files never leave the
 admin panel.
 
+**Answering a quote request.** **Quote requests** lists every enquiry, newest first, with the
+new ones badged in the sidebar. Open one to see the route, cargo and contact details, then use
+**Send a quotation** to email the customer a rate, transit time and validity — it is kept on
+the record. If you would rather answer from your phone, press Reply on the alert email in
+webmail; it is addressed to reply to the customer. Mark the request as quoted afterwards.
+Section 55 has the detail.
+
 **Customer messages.** **Messages** shows every conversation, with three views: all, assigned
 to me, and waiting to be picked up. Open one to read the thread, reply, and see the tracking
 details beside it. Use **Assign to** to hand it to a representative, or set it back to the
@@ -1406,11 +1524,18 @@ customer writes again.
 who only answers customers, or *Master Admin* for another full administrator. Give them the
 password directly; they can change it under **Your profile**.
 
+**Publishing contact details and reviews.** Extra contact lines (WhatsApp, a branch, an out of
+hours desk) go in **Site settings → Contact and hours → Additional contact details** and appear
+on the contact page, the footer and the tracking page. Client feedback goes in **Reviews**;
+nothing shows on the website until you publish it, and the heading above the section is
+editable under **Site settings → Homepage**.
+
 **Watching the desk.** The dashboard shows unread message counts, recent conversations,
-recent tracking updates and recent quote requests. **Audit logs** records every
+recent tracking updates and recent quote requests. The sidebar badges count new quote
+requests and new contact messages. **Audit logs** records every
 administrative action with who did it, when and from which address.
 
-## 57. Manual: customer representative
+## 61. Manual: customer representative
 
 **What you can do.** Answer the customers assigned to you, and pick up customers who have
 written in and have nobody handling them. You can see the tracking details for each
@@ -1473,6 +1598,12 @@ events and exception rules, customer chat and staff replies, authorisation betwe
 private document access, quote requests, the contact form, review publishing, notification
 sending, the launch checklist, brand colour publishing, legal placeholder substitution, the
 service artwork fallback, and the settings, tracking number and content formatting helpers.
+
+Quote handling has its own coverage too: the structured form validates and stores the route,
+countries must come from the list, the alert email is addressed to reply to the customer, a
+quotation sent from the dashboard is emailed and recorded, a representative cannot see or
+answer quote requests, extra contact details reach the contact page, footer and tracking page,
+and the reviews heading follows the settings.
 
 The role split has its own coverage: a representative cannot reach the shipment, status,
 customer, content, settings or audit screens; cannot open or reply to a conversation

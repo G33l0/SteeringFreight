@@ -139,6 +139,11 @@ class SettingDefinitions
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours note',
                 'default' => 'Times shown are local to our operations desk.',
             ],
+            'contact.extra_details' => [
+                'group' => 'contact', 'type' => self::TYPE_JSON, 'label' => 'Additional contact details',
+                'help' => 'One per line, written as "Label | Detail". For example "WhatsApp | +234 000 000 0000" or "Lagos branch | 12 Wharf Road, Apapa". These appear on the contact page and on the tracking page help panel.',
+                'default' => [],
+            ],
             'contact.response_note' => [
                 'group' => 'contact', 'type' => self::TYPE_TEXT, 'label' => 'Contact form note',
                 'default' => 'Send us the details of your shipment and a coordinator will come back to you during business hours.',
@@ -205,6 +210,16 @@ class SettingDefinitions
                 'help' => 'Empty on purpose: add only lanes you actually operate, one per line, written as "Region | Ports and airports served". The section stays hidden while this is empty.',
                 'default' => [], 'launch' => true,
             ],
+            'home.reviews_heading' => [
+                'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Client reviews heading',
+                'default' => 'What clients say',
+            ],
+            'home.reviews_intro' => [
+                'group' => 'home', 'type' => self::TYPE_TEXT, 'label' => 'Client reviews intro',
+                'help' => 'Shown above the reviews on the homepage and at the top of the client reviews page. The section stays hidden until you publish a review.',
+                'default' => 'Feedback from the importers, exporters and forwarding partners we work with, published as we receive it.',
+                'rows' => 2,
+            ],
             'home.cta_heading' => [
                 'group' => 'home', 'type' => self::TYPE_STRING, 'label' => 'Closing call to action heading',
                 'default' => 'Have cargo to move?',
@@ -250,6 +265,32 @@ class SettingDefinitions
                 'group' => 'tracking', 'type' => self::TYPE_INTEGER, 'label' => 'Maximum upload size, in kilobytes',
                 'help' => 'Applies to shipment documents and chat attachments. Your hosting also enforces its own limit through upload_max_filesize.',
                 'default' => config('portlane.uploads.max_kb'),
+            ],
+
+            // ---------------------------------------------------------------
+            // Quote requests
+            // ---------------------------------------------------------------
+            'quotes.intro' => [
+                'group' => 'quotes', 'type' => self::TYPE_TEXT, 'label' => 'Quote page intro',
+                'default' => 'Tell us where the cargo is, where it needs to go and what it is. We will come back with a rate and a realistic transit time.',
+                'rows' => 2,
+            ],
+            'quotes.confirmation' => [
+                'group' => 'quotes', 'type' => self::TYPE_TEXT, 'label' => 'Message shown after a request is sent',
+                'help' => 'The reference number is added to the end automatically.',
+                'default' => 'Thank you. Your request has reached our operations desk and a coordinator will reply by email.',
+                'rows' => 2,
+            ],
+            'quotes.frequent_countries' => [
+                'group' => 'quotes', 'type' => self::TYPE_JSON, 'label' => 'Frequently shipped countries',
+                'help' => 'Shown at the top of the country lists on the quote form, one per line. Must match the country names in the list, for example "China" or "United Arab Emirates".',
+                'default' => [],
+            ],
+            'quotes.reply_signature' => [
+                'group' => 'quotes', 'type' => self::TYPE_TEXT, 'label' => 'Default text for a quotation reply',
+                'help' => 'Pre-filled in the reply box on a quote request, so a coordinator only has to change the specifics.',
+                'default' => "Thank you for your enquiry.\n\nThe rate above covers the main freight leg, terminal handling at both ends and the customs entry at destination. It excludes duty, taxes and any storage after the free period.\n\nTo book, send us the commercial invoice and packing list and confirm the collection address. We will issue the booking and a tracking number the same day.",
+                'rows' => 8,
             ],
 
             // ---------------------------------------------------------------
@@ -355,6 +396,7 @@ class SettingDefinitions
             'contact' => 'Contact and hours',
             'home' => 'Homepage',
             'tracking' => 'Tracking and chat',
+            'quotes' => 'Quote requests',
             'notifications' => 'Notifications',
             'legal' => 'Legal',
             'brand' => 'Brand',

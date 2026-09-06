@@ -53,10 +53,10 @@
                 <p class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-500">Customer contact</p>
                 <x-admin.nav-link :href="route('admin.messages.index')" icon="chat" :active="request()->routeIs('admin.messages.*')" :badge="$unreadMessages ?? null">Messages</x-admin.nav-link>
                 @can('quotes.view')
-                    <x-admin.nav-link :href="route('admin.quotes.index')" icon="quote" :active="request()->routeIs('admin.quotes.*')">Quote requests</x-admin.nav-link>
+                    <x-admin.nav-link :href="route('admin.quotes.index')" icon="quote" :active="request()->routeIs('admin.quotes.*')" :badge="$newQuotes ?? null">Quote requests</x-admin.nav-link>
                 @endcan
                 @can('contact.view')
-                    <x-admin.nav-link :href="route('admin.contact-messages.index')" icon="mail" :active="request()->routeIs('admin.contact-messages.*')">Contact messages</x-admin.nav-link>
+                    <x-admin.nav-link :href="route('admin.contact-messages.index')" icon="mail" :active="request()->routeIs('admin.contact-messages.*')" :badge="$newContactMessages ?? null">Contact messages</x-admin.nav-link>
                 @endcan
                 @can('documents.view')
                     <x-admin.nav-link :href="route('admin.documents.index')" icon="documents" :active="request()->routeIs('admin.documents.*')">Documents</x-admin.nav-link>

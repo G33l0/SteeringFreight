@@ -139,7 +139,7 @@
     @if ($reviews->isNotEmpty())
         <section class="mx-auto max-w-6xl px-6 py-16 sm:py-20">
             <div class="flex flex-wrap items-end justify-between gap-4">
-                <h2 class="text-2xl font-semibold sm:text-3xl">What clients say</h2>
+                <h2 class="text-2xl font-semibold sm:text-3xl">{{ setting('home.reviews_heading') }}</h2>
                 <a href="{{ route('reviews') }}" class="text-sm font-semibold text-accent-700 underline underline-offset-2">All reviews</a>
             </div>
 

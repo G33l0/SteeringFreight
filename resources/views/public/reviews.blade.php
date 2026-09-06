@@ -1,8 +1,8 @@
 <x-layouts.public :metaTitle="$metaTitle" :metaDescription="$metaDescription">
     <x-page-header
         eyebrow="Client reviews"
-        title="What our clients say"
-        intro="Feedback from the importers, exporters and forwarding partners we work with, published as we receive it." />
+        :title="setting('home.reviews_heading')"
+        :intro="setting('home.reviews_intro')" />
 
     <div class="mx-auto max-w-6xl px-6 py-12 sm:py-16">
         @if ($reviews->isEmpty())

@@ -39,7 +39,9 @@
         </x-form.field>
 
         <x-form.field name="country" label="Country">
-            <input type="text" id="country" name="country" value="{{ $value('country') }}" maxlength="120" class="input">
+            <x-form.country-select name="country" :value="$value('country')"
+                                   :countries="\App\Support\Countries::names()"
+                                   :frequent="\App\Support\Countries::frequentlyUsed()" />
         </x-form.field>
 
         <x-form.field name="notes" label="Internal notes" class="sm:col-span-2" help="Never shown to the customer.">
