@@ -57,6 +57,11 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   changeable without a front end rebuild.
 - Private files (shipment documents) live on the `local` disk and are only ever streamed
   by a controller that checks authorisation. The chat stores no files at all.
+- SQLite is a supported production database, not only the test harness: WAL, a busy timeout
+  and `synchronous NORMAL` are set in `config/database.php`, `portlane:backup-database` takes
+  a consistent copy with `VACUUM INTO`, and `database/.htaccess` keeps the file off the web.
+  Keep per request writes off the database file — the chat marks messages read only when
+  there is something to mark.
 - Tests run on SQLite in memory. `Tests\TestCase` provides `seedCoreData()`,
   `administrator()`, `agent()` and `trackingStatus()`.
 

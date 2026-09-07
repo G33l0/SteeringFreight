@@ -91,6 +91,10 @@ invented by the application: statuses, locations and descriptions are entered by
 60. [Manual: master admin](#60-manual-master-admin)
 61. [Manual: customer representative](#61-manual-customer-representative)
 
+**Operating on SQLite**
+
+62. [Running on SQLite in production](#62-running-on-sqlite-in-production)
+
 ---
 
 ## 1. Project overview
@@ -176,7 +180,7 @@ the FAQ entries, the reviews and all the company details are editable in the adm
 | --- | --- |
 | Language | PHP 8.4 (8.3 minimum) |
 | Framework | Laravel 13 |
-| Database | MySQL 8 or MariaDB 10.6+ (SQLite is used by the test suite) |
+| Database | SQLite, or MySQL 8 / MariaDB 10.6+ (see sections 9 and 62) |
 | Templates | Blade |
 | CSS | Tailwind CSS 4, compiled with Vite |
 | JavaScript | Alpine.js |
@@ -194,10 +198,10 @@ operation when you have them (section 47).
 ## 4. System requirements
 
 - PHP 8.3 or later, with the extensions: `bcmath` or `gmp`, `ctype`, `curl`, `dom`,
-  `fileinfo`, `filter`, `hash`, `mbstring`, `openssl`, `pcre`, `pdo`, `pdo_mysql`,
+  `fileinfo`, `filter`, `hash`, `mbstring`, `openssl`, `pcre`, `pdo`, `pdo_sqlite` or `pdo_mysql`,
   `session`, `tokenizer`, `xml`, `zip`, and `gd` (for image uploads)
 - Composer 2
-- MySQL 8 or MariaDB 10.6 or later
+- SQLite (bundled with PHP through `pdo_sqlite`), or MySQL 8 or MariaDB 10.6 or later
 - Node.js 20 or later — only needed to rebuild the CSS and JavaScript. The compiled assets
   are committed in `public/build`, so the site runs on a server without Node.
 - About 200 MB of disk space, plus room for uploaded documents
@@ -267,7 +271,36 @@ the lock file in this project is `package-lock.json`, so npm is the simplest cho
 
 ## 9. Creating the database
 
-Create an empty database and a user with full rights on it.
+Two databases are supported, and the choice is yours to make before you install.
+
+**SQLite** is one file on disk. There is no server to install, no user or password to
+create, and nothing to configure. It is a sound choice for a freight desk creating up to a
+few hundred shipments a month with a handful of staff signed in — the shipment, event and
+message tables stay small, and reads far outnumber writes. Choose it if you want one less
+moving part.
+
+```sh
+touch database/database.sqlite
+chmod 660 database/database.sqlite
+```
+
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=/home/youraccount/portlane/database/database.sqlite
+SESSION_DRIVER=file
+CACHE_STORE=file
+```
+
+Use the **absolute** path; a relative one is resolved against the working directory and will
+bite you the first time cron runs. The two driver lines keep session and cache writes out of
+the database file, so ordinary page views never queue behind each other. Everything else
+about SQLite is already configured in `config/database.php` — see section 62 for what is set
+and why, and for when to move to MySQL.
+
+**MySQL 8 or MariaDB 10.6+** is the choice when several people are writing all day, when you
+want the host's own backup tooling to cover the database, or when you expect the archive to
+run to tens of thousands of shipments. Create an empty database and a user with full rights
+on it.
 
 ```sh
 mysql -u root -p
@@ -305,6 +338,13 @@ DB_PORT=3306
 DB_DATABASE=portlane
 DB_USERNAME=portlane
 DB_PASSWORD=choose-a-strong-password
+```
+
+On SQLite those six lines are replaced by two:
+
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=/home/youraccount/portlane/database/database.sqlite
 ```
 
 For local development use `APP_ENV=local`, `APP_DEBUG=true`,
@@ -867,8 +907,11 @@ Two things need backing up: the **database** and `storage/app` (uploaded documen
 images).
 
 ```sh
-# Database
+# Database, on MySQL
 mysqldump -u portlane -p portlane > backup-$(date +%F).sql
+
+# Database, on SQLite (safe while the site is running; never plain cp)
+php artisan portlane:backup-database
 
 # Files
 tar -czf storage-$(date +%F).tar.gz storage/app
@@ -963,7 +1006,10 @@ uploads stored outside the web root, and an audit log that never records credent
 | `APP_URL` | Public address, used for links, emails and the sitemap | `https://example.com` |
 | `APP_TIMEZONE` | Timezone for dates and times | `UTC` |
 | `LOG_CHANNEL` / `LOG_STACK` / `LOG_LEVEL` | Logging | `stack` / `daily` / `error` |
-| `DB_CONNECTION` | `mysql` in production, `sqlite` for quick trials | `mysql` |
+| `DB_CONNECTION` | `sqlite` or `mysql`; both are supported in production | `mysql` |
+| `DB_JOURNAL_MODE` | SQLite journal mode; leave on WAL | `WAL` |
+| `DB_BUSY_TIMEOUT` | Milliseconds a SQLite write waits for the lock | `5000` |
+| `DB_SYNCHRONOUS` | SQLite durability setting | `NORMAL` |
 | `DB_HOST` / `DB_PORT` | Database server | `127.0.0.1` / `3306` |
 | `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | Database credentials | `portlane` |
 | `SESSION_DRIVER` | Where sessions are stored | `database` |
@@ -1668,6 +1714,87 @@ which their next message starts a fresh conversation.
 **What to escalate.** Anything that needs the shipment file changed — a wrong delivery date,
 a missing document, a status that does not match reality — goes to the master admin. You can
 tell the customer what the file currently says, but only the master admin can change it.
+
+---
+
+## 62. Running on SQLite in production
+
+SQLite is a supported production database here, not only a development convenience. This
+section is what you need to know if you choose it.
+
+**When it is the right choice.** A freight desk booking up to a few hundred shipments a
+month, with a handful of staff signed in and customers checking tracking pages, is nowhere
+near the limits of one SQLite file. The site is overwhelmingly read heavy: a tracking page
+is reads, and a shipment or a tracking event is one small write entered by one person.
+There is no server to install, no credentials to leak, and the whole database is a file you
+can copy.
+
+**What is already configured.** `config/database.php` sets three pragmas on the SQLite
+connection, and they are what make the above true rather than optimistic:
+
+| Pragma | Value | Why |
+| --- | --- | --- |
+| `journal_mode` | `WAL` | Readers keep working while a write is in progress, instead of blocking each other. |
+| `busy_timeout` | `5000` | A request waits up to five seconds for the write lock instead of failing with "database is locked". |
+| `synchronous` | `NORMAL` | The usual pairing with WAL: durable across an application crash, at risk only in a sudden power loss. |
+
+Each is overridable with `DB_JOURNAL_MODE`, `DB_BUSY_TIMEOUT` and `DB_SYNCHRONOUS`, but the
+defaults are the ones you want. WAL creates two sidecar files next to the database
+(`database.sqlite-wal` and `database.sqlite-shm`); they belong there, and they are in
+`.gitignore`.
+
+**Keep other writes off the file.** Set `SESSION_DRIVER=file` and `CACHE_STORE=file`. Left
+on `database`, every page view — including every chat poll — writes a session row, and those
+writes queue behind each other for no benefit. The application itself is careful about this
+too: the chat marks messages as read only when there is actually something to mark, so an
+open tracking page polling every eight seconds performs reads and nothing else.
+
+**Protect the file.** The web server's document root must be `public/`, which puts
+`database/` outside it. `database/.htaccess` denies web access as a second line of defence,
+for hosts where the whole application ends up under `public_html`. Test it after deploying:
+
+```
+https://example.com/database/database.sqlite
+```
+
+must return 403 or 404. If that URL downloads a file, stop and fix the document root before
+going any further — that file is your entire database, customer records included.
+
+**Back it up.** Nobody else is looking after this file. Copying it with `cp` while a write is
+in flight can produce a corrupt copy, so use the built in command, which uses SQLite's own
+`VACUUM INTO` and is safe on a running site:
+
+```sh
+php artisan portlane:backup-database              # writes to database/backups
+php artisan portlane:backup-database --path=~/backups --keep=30
+```
+
+It runs nightly at 02:30 from the scheduler (section 31) whenever the connection is SQLite,
+keeping the last fourteen copies. Two things to do yourself: `storage/app` holds the uploaded
+shipment documents and is not part of the database backup, and a backup that only exists on
+the server is not a backup — pull a copy off the machine.
+
+Restoring is a file copy, with the site in maintenance mode:
+
+```sh
+php artisan down
+cp ~/backups/portlane-2026-09-07-023000.sqlite database/database.sqlite
+php artisan up
+```
+
+**What would make you switch to MySQL.** None of these are hypothetical limits of SQLite as
+such; they are the points where a database server starts paying for itself:
+
+- Several people entering shipments and events at the same time, all day, rather than a few
+  updates an hour. Writes are serialised, so sustained concurrent writing is where you feel it.
+- Tens of thousands of shipments in the archive with heavy searching across them.
+- Your host backs up MySQL for you but not your files, and you would rather rely on that.
+- You want to move to more than one web server, which a single file cannot serve.
+
+**Switching later is straightforward**, because nothing in the application is written against
+one engine: create the MySQL database (section 9), point `.env` at it, run
+`php artisan migrate --force`, and re-enter or import your data. Do it before the archive
+gets large rather than after.
 
 ---
 

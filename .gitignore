@@ -25,6 +25,9 @@
 # Local database
 /database/*.sqlite
 /database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+/database/backups
 
 # Tests and tooling
 .phpunit.result.cache

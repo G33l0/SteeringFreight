@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Schedule;
 // retention window in config/portlane.php, which is 24 hours by default.
 Schedule::command('portlane:purge-chat')->hourly();
 
+// Nightly database backup, for installs running on SQLite where the database is
+// a file nobody else is looking after. On MySQL the hosting panel does this.
+if (config('database.default') === 'sqlite') {
+    Schedule::command('portlane:backup-database')->dailyAt('02:30');
+}
+
 // Remove expired password reset tokens.
 Schedule::command('auth:clear-resets')->daily();
 

@@ -135,22 +135,40 @@ class ChatService
 
     public function markReadByStaff(ChatConversation $conversation): void
     {
-        $conversation->messages()
-            ->where('sender_type', MessageSender::Customer->value)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
-        $conversation->forceFill(['unread_for_staff' => 0])->save();
+        $this->markRead($conversation, MessageSender::Customer, 'unread_for_staff');
     }
 
     public function markReadByCustomer(ChatConversation $conversation): void
     {
-        $conversation->messages()
-            ->where('sender_type', MessageSender::Staff->value)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+        $this->markRead($conversation, MessageSender::Staff, 'unread_for_customer');
+    }
 
-        $conversation->forceFill(['unread_for_customer' => 0])->save();
+    /**
+     * Mark the other side's messages as read, writing nothing when there is
+     * nothing to mark.
+     *
+     * The tracking page polls this every few seconds for as long as it is open,
+     * so an unconditional pair of updates here would be the busiest write in
+     * the application, for no reason. That matters most on SQLite, where every
+     * write takes the database's write lock.
+     */
+    private function markRead(ChatConversation $conversation, MessageSender $from, string $counter): void
+    {
+        $unread = $conversation->messages()
+            ->where('sender_type', $from->value)
+            ->whereNull('read_at')
+            ->exists();
+
+        if ($unread) {
+            $conversation->messages()
+                ->where('sender_type', $from->value)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+        }
+
+        if ($conversation->{$counter} !== 0) {
+            $conversation->forceFill([$counter => 0])->save();
+        }
     }
 
     /**

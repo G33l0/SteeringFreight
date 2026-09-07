@@ -1,0 +1,13 @@
+# The application is served from public/, so this directory is already outside
+# the web root on a correctly configured host. This file is a second line of
+# defence for shared hosting where the whole application sits under public_html:
+# it stops the SQLite database and its backups from being downloaded over HTTP.
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

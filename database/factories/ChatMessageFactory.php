@@ -24,4 +24,14 @@ class ChatMessageFactory extends Factory
             'body' => 'Could you confirm the expected arrival date?',
         ];
     }
+
+    /** A reply written by a member of staff rather than the customer. */
+    public function fromStaff(): static
+    {
+        return $this->state(fn () => [
+            'sender_type' => MessageSender::Staff,
+            'sender_name' => 'Operations desk',
+            'body' => 'The vessel is on schedule for Friday.',
+        ]);
+    }
 }

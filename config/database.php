@@ -32,15 +32,32 @@ return [
 
     'connections' => [
 
+        /*
+         * SQLite is a supported production database for this application, not
+         * only a development convenience: a freight desk writing a few hundred
+         * shipments and tracking events a month is well inside what one file
+         * handles. The three pragmas below are what make it safe to run that
+         * way, so leave them alone unless you know why you are changing them.
+         *
+         *  - WAL lets the site keep serving pages while a write is in progress,
+         *    instead of readers and the writer blocking each other.
+         *  - busy_timeout tells a request to wait for the write lock rather
+         *    than failing with "database is locked" the moment it is contended.
+         *  - synchronous NORMAL is the usual pairing with WAL: durable across
+         *    an application crash, and only at risk in a sudden power loss.
+         *
+         * An in memory database (the test suite) ignores the journal mode,
+         * which is why the tests are unaffected by any of this.
+         */
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            'busy_timeout' => env('DB_BUSY_TIMEOUT', 5000),
+            'journal_mode' => env('DB_JOURNAL_MODE', 'WAL'),
+            'synchronous' => env('DB_SYNCHRONOUS', 'NORMAL'),
             'transaction_mode' => 'DEFERRED',
         ],
 
