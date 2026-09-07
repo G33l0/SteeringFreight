@@ -1448,6 +1448,24 @@ Nigeria
 Those appear in a **Frequently shipped** group above the full list on every country selector.
 Leave it empty and a sensible default set is used.
 
+**Showing the countries you ship to, with flags.** The homepage has a *Where we ship* section
+that is hidden until you fill it in. **Site settings → Home page → Destination lanes**, one
+lane per line, written as `Region | Countries served, separated by commas`:
+
+```
+West Africa | Nigeria, Ghana, Benin, Togo
+East Asia | China, South Korea, Japan, Vietnam
+```
+
+Each entry that matches the country list is printed with its flag next to the country name.
+Anything that is not a country — a port, an airport, a note — is printed exactly as you typed
+it, so existing copy is unaffected. The flag never replaces the name: Windows draws flag emoji
+as the two letter country code rather than a picture, and the name has to read correctly there
+too.
+
+Common short forms are understood as well, so `UAE`, `UK`, `USA`, `Turkey`, `Hong Kong` and
+`Ivory Coast` are matched to the right country.
+
 ## 59. Staff roles at a glance
 
 | | Master Admin | Customer Representative |

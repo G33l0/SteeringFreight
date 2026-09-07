@@ -126,8 +126,12 @@
                 <dl class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                     @foreach ($destinations as $destination)
                         <div class="border-t border-ink-700 pt-5">
-                            <dt class="font-display text-base font-semibold text-white">{{ $destination['title'] ?? '' }}</dt>
-                            <dd class="mt-2 text-sm leading-relaxed text-ink-300">{{ $destination['body'] ?? '' }}</dd>
+                            <dt class="font-display text-base font-semibold text-white">
+                                <x-country-name :name="$destination['title'] ?? ''" />
+                            </dt>
+                            <dd class="mt-2 text-sm leading-relaxed text-ink-300">
+                                <x-country-list :text="$destination['body'] ?? ''" />
+                            </dd>
                         </div>
                     @endforeach
                 </dl>

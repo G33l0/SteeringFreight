@@ -37,6 +37,10 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   shipment records. Do not hard code company details in templates.
 - Countries come from `App\Support\Countries` and are validated against it everywhere they
   are entered, so a quote and a shipment for the same lane read identically.
+  `Countries::flag()` turns a name (or a common short form) into its flag; the homepage
+  destination lanes use it through `x-country-name` / `x-country-list`. The flag is always
+  shown beside the country name, never instead of it, because Windows draws flag emoji as the
+  two letter code. This is the one place the public site uses emoji.
 - Quote requests reach the dashboard and the operations mailbox at once. The alert email sets
   reply-to to the customer, a quotation sent from the panel sets reply-to to the operations
   address and is stored as a `QuoteReply`.

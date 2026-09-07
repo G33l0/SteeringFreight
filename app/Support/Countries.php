@@ -87,6 +87,71 @@ class Countries
     }
 
     /**
+     * Short forms an operator is likely to type when writing page copy,
+     * mapped onto the canonical names above. Only unambiguous ones.
+     *
+     * @return array<string, string> lower case alias => ISO 3166-1 alpha-2 code
+     */
+    protected static function aliases(): array
+    {
+        return [
+            'uae' => 'AE', 'u.a.e.' => 'AE', 'emirates' => 'AE',
+            'uk' => 'GB', 'u.k.' => 'GB', 'great britain' => 'GB', 'britain' => 'GB', 'england' => 'GB',
+            'usa' => 'US', 'u.s.a.' => 'US', 'us' => 'US', 'united states of america' => 'US',
+            'turkey' => 'TR', 'ivory coast' => 'CI', 'holland' => 'NL',
+            'south korea' => 'KR', 'korea' => 'KR', 'north korea' => 'KP',
+            'hong kong' => 'HK', 'macao' => 'MO', 'macau' => 'MO',
+            'viet nam' => 'VN', 'burma' => 'MM', 'czech republic' => 'CZ',
+            'drc' => 'CD', 'dr congo' => 'CD', 'cape verde' => 'CV',
+            'swaziland' => 'SZ', 'east timor' => 'TL', 'uae emirates' => 'AE',
+        ];
+    }
+
+    /**
+     * The ISO 3166-1 alpha-2 code for a country name, matched loosely enough to
+     * cope with the spacing and capitalisation of hand written page copy.
+     */
+    public static function code(?string $name): ?string
+    {
+        $needle = mb_strtolower(trim((string) $name));
+
+        if ($needle === '') {
+            return null;
+        }
+
+        foreach (self::all() as $code => $country) {
+            if (mb_strtolower($country) === $needle) {
+                return $code;
+            }
+        }
+
+        return self::aliases()[$needle] ?? null;
+    }
+
+    /**
+     * The flag for a country name as a regional indicator pair, or null when
+     * the text is not a country we recognise. Windows renders these as the two
+     * letter code rather than a picture, which is why the name is always shown
+     * next to the flag rather than replaced by it.
+     */
+    public static function flag(?string $name): ?string
+    {
+        $code = self::code($name);
+
+        if ($code === null) {
+            return null;
+        }
+
+        $flag = '';
+
+        foreach (str_split($code) as $letter) {
+            $flag .= mb_chr(0x1F1E6 + (ord($letter) - ord('A')), 'UTF-8');
+        }
+
+        return $flag;
+    }
+
+    /**
      * The names an operator is most likely to reach for, shown above the full
      * list. Editable through the "Frequently used countries" setting so a
      * business can put its own lanes at the top.

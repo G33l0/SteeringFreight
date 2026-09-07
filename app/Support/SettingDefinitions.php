@@ -207,7 +207,7 @@ class SettingDefinitions
             ],
             'home.destinations' => [
                 'group' => 'home', 'type' => self::TYPE_JSON, 'label' => 'Destination lanes',
-                'help' => 'Empty on purpose: add only lanes you actually operate, one per line, written as "Region | Ports and airports served". The section stays hidden while this is empty.',
+                'help' => 'Empty on purpose: add only lanes you actually operate, one per line, written as "Region | Countries served, separated by commas". Country names are matched against the country list and shown with their flag; anything else is printed exactly as you write it. The section stays hidden while this is empty.',
                 'default' => [], 'launch' => true,
             ],
             'home.reviews_heading' => [
