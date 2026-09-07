@@ -30,9 +30,9 @@ return [
 
     'disks' => [
 
-        // Private disk. Shipment documents and chat attachments live here and
-        // are only ever streamed through a controller that checks authorisation,
-        // so the framework's own signed file route is switched off.
+        // Private disk. Shipment documents live here and are only ever streamed
+        // through a controller that checks authorisation, so the framework's own
+        // signed file route is switched off. The customer chat stores no files.
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

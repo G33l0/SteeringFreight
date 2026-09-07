@@ -19,6 +19,10 @@
                     <p class="text-xs text-ink-500">
                         {{ $conversation->contact_email }} · started {{ $conversation->created_at->format('j M Y, H:i') }}
                     </p>
+                    <p class="mt-1 text-xs text-ink-500">
+                        Clears {{ $conversation->expiresAt()->format('j M Y, H:i') }}. Anything that has to be kept
+                        belongs on the shipment, not in the chat.
+                    </p>
                 </div>
                 <span class="badge {{ $conversation->isOpen() ? 'badge-green' : 'badge-slate' }}">{{ $conversation->status->label() }}</span>
             </div>
@@ -35,12 +39,6 @@
                                 {{ $message->sender_name }}{{ $message->fromStaff() ? ' (staff)' : '' }}
                             </p>
                             <p class="mt-1 whitespace-pre-line leading-relaxed">{{ $message->body }}</p>
-                            @if ($message->hasAttachment())
-                                <a href="{{ route('admin.messages.attachment', [$conversation, $message]) }}"
-                                   class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-700 hover:underline">
-                                    <x-icon name="download" class="h-3.5 w-3.5" />{{ $message->attachment_name }}
-                                </a>
-                            @endif
                             <p class="mt-1.5 text-[11px] text-ink-400">{{ $message->created_at->format('j M Y, H:i') }}</p>
                         </div>
                     </div>
@@ -48,7 +46,7 @@
             </div>
 
             @can('reply', $conversation)
-                <form method="POST" action="{{ route('admin.messages.reply', $conversation) }}" enctype="multipart/form-data"
+                <form method="POST" action="{{ route('admin.messages.reply', $conversation) }}"
                       class="space-y-3 border-t border-ink-100 p-4 sm:p-5">
                     @csrf
                     <div>
@@ -56,7 +54,6 @@
                         <textarea id="body" name="body" rows="4" required maxlength="{{ config('portlane.chat.message_max_length') }}" class="textarea">{{ old('body') }}</textarea>
                     </div>
                     <div class="flex flex-wrap items-center gap-3">
-                        <input type="file" name="attachment" class="input max-w-xs py-1.5 text-xs">
                         <button type="submit" class="btn btn-primary btn-sm">Send reply</button>
                         @unless ($conversation->isAssigned())
                             <span class="text-xs text-ink-500">Replying will assign this conversation to you.</span>

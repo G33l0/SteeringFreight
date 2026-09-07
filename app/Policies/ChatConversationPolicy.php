@@ -12,6 +12,9 @@ use App\Models\User;
  * ones assigned to them plus anything still unassigned, which is how a customer
  * who has just written in gets picked up. Replying to an unassigned
  * conversation claims it, after which it belongs to that representative.
+ *
+ * Nobody, of any role, can open a conversation that is past the chat retention
+ * window: it is due to be deleted and is treated as already gone.
  */
 class ChatConversationPolicy
 {
@@ -22,7 +25,7 @@ class ChatConversationPolicy
 
     public function view(User $user, ChatConversation $conversation): bool
     {
-        if (! $user->hasPermission('chat.view')) {
+        if (! $user->hasPermission('chat.view') || $conversation->hasExpired()) {
             return false;
         }
 
@@ -55,7 +58,7 @@ class ChatConversationPolicy
      */
     public function assign(User $user, ChatConversation $conversation): bool
     {
-        return $user->hasPermission('chat.manage');
+        return $user->hasPermission('chat.manage') && ! $conversation->hasExpired();
     }
 
     /**

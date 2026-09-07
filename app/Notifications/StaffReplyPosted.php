@@ -8,10 +8,12 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
 /**
  * Lets the customer know a reply is waiting on the tracking page.
+ *
+ * The reply is not repeated in the email: the conversation lives on the
+ * tracking page only, and is cleared once it is past the retention window.
  */
 class StaffReplyPosted extends Notification implements ShouldQueue
 {
@@ -36,9 +38,8 @@ class StaffReplyPosted extends Notification implements ShouldQueue
             ->subject("Reply about shipment {$tracking}")
             ->greeting("Hello {$this->conversation->contact_name},")
             ->line("Our team has replied to your message about shipment {$tracking}.")
-            ->line(Str::limit($this->message->body, 300))
             ->action('Open the tracking page', route('track.show', $tracking))
-            ->line('Replies are shown on the tracking page for this shipment.')
+            ->line('The reply is shown in the conversation window on that page, which is cleared '.chat_retention_hours().' hours after the last message.')
             ->salutation(setting('notifications.signature', 'Operations desk'));
     }
 }

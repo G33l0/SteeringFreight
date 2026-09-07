@@ -10,12 +10,21 @@
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3">
         <div>
             <p class="font-display text-sm font-semibold">{{ $conversation->subject ?: 'Shipment '.$shipment->tracking_number }}</p>
-            <p class="text-xs text-ink-500">Started {{ $conversation->created_at->format('j M Y') }}</p>
+            <p class="text-xs text-ink-500" x-show="! cleared">
+                Started {{ $conversation->created_at->format('j M Y') }} · clears {{ $conversation->expiresAt()->format('j M Y, H:i') }}
+            </p>
         </div>
-        <span class="badge {{ $conversation->isOpen() ? 'badge-green' : 'badge-slate' }}">{{ $conversation->status->label() }}</span>
+        <span class="badge {{ $conversation->isOpen() ? 'badge-green' : 'badge-slate' }}" x-show="! cleared">{{ $conversation->status->label() }}</span>
+        <span class="badge badge-slate" x-show="cleared" x-cloak>Cleared</span>
     </div>
 
-    <div x-ref="thread" class="max-h-96 space-y-4 overflow-y-auto px-5 py-4">
+    <div x-show="cleared" x-cloak class="px-5 py-6 text-sm leading-relaxed text-ink-600">
+        This conversation has been cleared: messages are only kept for {{ chat_retention_hours() }} hours after the
+        last one. <a href="{{ route('track.show', $shipment->tracking_number) }}" class="font-medium text-accent-700 underline underline-offset-2">Reload the page</a>
+        to start a new one.
+    </div>
+
+    <div x-ref="thread" x-show="! cleared" class="max-h-96 space-y-4 overflow-y-auto px-5 py-4">
         @foreach ($messages as $message)
             <div @class(['flex', 'justify-end' => ! $message->fromStaff()])>
                 <div @class([
@@ -27,12 +36,6 @@
                         {{ $message->fromStaff() ? company_name() : $message->sender_name }}
                     </p>
                     <p class="mt-1 whitespace-pre-line leading-relaxed">{{ $message->body }}</p>
-                    @if ($message->hasAttachment())
-                        <a href="{{ route('track.chat.attachment', ['tracking_number' => $shipment->tracking_number, 'conversation' => $conversation, 'message' => $message]) }}"
-                           class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-700 hover:underline">
-                            <x-icon name="download" class="h-3.5 w-3.5" />{{ $message->attachment_name }}
-                        </a>
-                    @endif
                     <p class="mt-1.5 text-[11px] text-ink-400">{{ $message->created_at->format('j M Y, H:i') }}</p>
                 </div>
             </div>
@@ -45,16 +48,13 @@
                      :class="message.from_staff ? 'bg-ink-50 text-ink-800' : 'bg-accent-50 text-ink-900'">
                     <p class="text-xs font-semibold" :class="message.from_staff ? 'text-ink-600' : 'text-accent-700'" x-text="message.sender"></p>
                     <p class="mt-1 whitespace-pre-line leading-relaxed" x-text="message.body"></p>
-                    <template x-if="message.attachment">
-                        <a :href="message.attachment.url" class="mt-2 inline-flex text-xs font-semibold text-accent-700 hover:underline" x-text="message.attachment.name"></a>
-                    </template>
                     <p class="mt-1.5 text-[11px] text-ink-400" x-text="message.sent_at"></p>
                 </div>
             </div>
         </template>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-3 border-t border-ink-100 px-5 py-4"
+    <form method="POST" x-show="! cleared" class="space-y-3 border-t border-ink-100 px-5 py-4"
           action="{{ route('track.chat.reply', ['tracking_number' => $shipment->tracking_number, 'conversation' => $conversation]) }}">
         @csrf
 
@@ -65,10 +65,6 @@
             @error('body')<p class="error">{{ $message }}</p>@enderror
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <input type="file" name="attachment" class="input max-w-xs py-1.5 text-xs">
-            <button type="submit" class="btn btn-primary btn-sm">Send</button>
-        </div>
-        @error('attachment')<p class="error">{{ $message }}</p>@enderror
+        <button type="submit" class="btn btn-primary btn-sm">Send</button>
     </form>
 </div>

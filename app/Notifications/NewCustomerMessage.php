@@ -8,10 +8,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
 /**
  * Internal alert sent to the operations address when a customer writes in.
+ *
+ * The alert says a message is waiting and links to it. What the customer wrote
+ * stays in the chat window, which is cleared on a fixed schedule, so it is not
+ * copied into a mailbox that keeps it indefinitely.
  */
 class NewCustomerMessage extends Notification implements ShouldQueue
 {
@@ -35,7 +38,7 @@ class NewCustomerMessage extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject("New customer message: {$tracking}")
             ->line("{$this->conversation->contact_name} ({$this->conversation->contact_email}) sent a message about shipment {$tracking}.")
-            ->line(Str::limit($this->message->body, 400))
+            ->line('The message itself is only in the conversation window, which clears '.chat_retention_hours().' hours after the last reply.')
             ->action('Open the conversation', route('admin.messages.show', $this->conversation));
     }
 }

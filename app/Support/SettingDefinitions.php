@@ -263,7 +263,7 @@ class SettingDefinitions
             ],
             'uploads.max_kb' => [
                 'group' => 'tracking', 'type' => self::TYPE_INTEGER, 'label' => 'Maximum upload size, in kilobytes',
-                'help' => 'Applies to shipment documents and chat attachments. Your hosting also enforces its own limit through upload_max_filesize.',
+                'help' => 'Applies to shipment documents uploaded in the admin panel. Files cannot be sent through the customer chat at all. Your hosting also enforces its own limit through upload_max_filesize.',
                 'default' => config('portlane.uploads.max_kb'),
             ],
 

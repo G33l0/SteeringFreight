@@ -4,6 +4,10 @@
  * New messages are collected by polling a small JSON endpoint, which keeps the
  * feature working on shared hosting with no websocket server. Swapping in a
  * broadcast listener later only means replacing the fetch below.
+ *
+ * A conversation is deleted once it is past the retention window. The endpoint
+ * answers 404 from that moment, and the page takes the thread off the screen
+ * rather than leaving a copy of it sitting in the browser.
  */
 export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) {
     return {
@@ -13,6 +17,8 @@ export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) 
         messages: [],
         polling: false,
         failures: 0,
+        cleared: false,
+        timer: null,
 
         init() {
             this.scrollToEnd();
@@ -26,15 +32,26 @@ export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) 
         },
 
         schedule() {
-            window.setInterval(() => {
+            this.timer = window.setInterval(() => {
                 if (! document.hidden) {
                     this.poll();
                 }
             }, this.interval);
         },
 
+        // The conversation is gone. Clear what is on screen and stop polling.
+        clear() {
+            this.cleared = true;
+            this.messages = [];
+
+            if (this.timer) {
+                window.clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+
         async poll() {
-            if (this.polling) {
+            if (this.polling || this.cleared) {
                 return;
             }
 
@@ -45,6 +62,12 @@ export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) 
                     headers: { Accept: 'application/json' },
                     credentials: 'same-origin',
                 });
+
+                if (response.status === 404) {
+                    this.clear();
+
+                    return;
+                }
 
                 if (! response.ok) {
                     throw new Error(`Unexpected response: ${response.status}`);

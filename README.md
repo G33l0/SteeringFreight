@@ -118,7 +118,8 @@ the FAQ entries, the reviews and all the company details are editable in the adm
   Contact, FAQ, Client Reviews, Privacy Policy, Terms of Service
 - Shipment tracking with a milestone timeline, progress bar, event history, shipment
   details and downloadable documents
-- Customer chat attached to the shipment, using lightweight polling
+- Customer chat attached to the shipment, using lightweight polling. The chat holds no
+  files and is cleared 24 hours after the last message
 - A structured quote request form: contact details, route (country and city, chosen from a
   full country list), preferred method and incoterm, then cargo type, weight, dimensions,
   packages, commercial value and ready date
@@ -472,8 +473,9 @@ try it without sending anything, set `MAIL_MAILER=log` and read `storage/logs`.
 
 Two disks are used:
 
-- **`local`** (`storage/app/private`) — shipment documents and chat attachments. These are
+- **`local`** (`storage/app/private`) — shipment documents, uploaded by staff. These are
   never served directly; they are streamed by a controller after an authorisation check.
+  Nothing from the customer chat is stored here: files cannot be sent through the chat.
 - **`public`** (`storage/app/public`) — images uploaded for services, reviews, the logo and
   the hero. These are served through a symbolic link.
 
@@ -548,6 +550,16 @@ the shipment's current status and progress are recalculated from the remaining h
 5. Open the same tracking page in a different browser and confirm the earlier conversation
    is **not** visible: a conversation is tied to the session that created it, so a tracking
    number alone never exposes someone else's messages.
+6. Confirm there is no file field anywhere in the chat. Files are deliberately not accepted.
+7. Check the retention behaviour:
+
+   ```sh
+   php artisan portlane:purge-chat
+   ```
+
+   It reports how many conversations were older than the retention window. To see it remove
+   something, set a conversation's `last_message_at` to more than 24 hours ago and run it
+   again; the conversation and its messages are deleted.
 
 ## 26. Testing administrator login
 
@@ -774,8 +786,8 @@ Now make the domain serve `public/`. Best option first:
 
 ## 31. Cron configuration
 
-One cron entry runs Laravel's scheduler, which clears expired password reset tokens and
-prunes old queue records:
+One cron entry runs Laravel's scheduler, which clears the customer chat, removes expired
+password reset tokens and prunes old queue records:
 
 ```
 * * * * * cd /home/youraccount/portlane && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
@@ -784,6 +796,11 @@ prunes old queue records:
 Find the correct PHP path with `which php` over SSH, or in the control panel's PHP
 selector. Many panels ask for the command without the leading `* * * * *`, in which case
 paste only the part after it and choose "every minute".
+
+Set this up: it is what runs `portlane:purge-chat` every hour. If the cron entry is missing,
+conversations past the retention window are still unreadable — nobody, customer or staff,
+can open one — and the application clears them itself while the chat is being used, but the
+scheduled run is what guarantees it happens on a quiet site.
 
 ## 32. Queue configuration
 
@@ -966,7 +983,8 @@ uploads stored outside the web root, and an audit log that never records credent
 | `TRACKING_PREFIX` | Default tracking prefix before one is saved in settings | `PLS` |
 | `TRACKING_DIGITS` | Digits after the prefix | `8` |
 | `CHAT_POLL_INTERVAL` | Milliseconds between chat polls | `8000` |
-| `UPLOAD_MAX_KB` | Largest document or attachment, in kilobytes | `8192` |
+| `CHAT_RETENTION_HOURS` | Hours a conversation lives after its last message | `24` |
+| `UPLOAD_MAX_KB` | Largest shipment document, in kilobytes | `8192` |
 
 ## 40. Project directory structure
 
@@ -1011,7 +1029,7 @@ portlane/
 │   ├── console.php                Scheduled maintenance tasks
 │   └── web.php                    Every route in the application
 ├── storage/
-│   ├── app/private/               Shipment documents and chat attachments (not public)
+│   ├── app/private/               Shipment documents (not public; the chat stores no files)
 │   ├── app/public/                Uploaded images (served through the storage link)
 │   └── logs/                      Application logs
 └── tests/
@@ -1106,7 +1124,7 @@ looked the shipment up.
 
 ```
 Customer opens the tracking page → Contact shipping team
-  → gives a name, email address and message (a file can be attached)
+  → gives a name, email address and message (no files: the chat does not accept them)
 Conversation is created against that shipment, unassigned
   → a copy goes to your internal notification address
 A representative picks it up, or replies to it, which assigns it to them
@@ -1115,7 +1133,35 @@ A representative picks it up, or replies to it, which assigns it to them
 They reply from Messages, with the shipment's tracking details beside the thread
   → the customer sees the reply on the tracking page and gets an email telling them so
 Conversation is closed when the question is answered, and reopens if the customer writes again
+  → 24 hours after the last message the whole conversation is deleted
 ```
+
+**The chat is a window, not a record**
+
+This is deliberate, and it is the part to understand before you change anything here:
+
+- **Nothing can be uploaded.** There is no file field on either side of the chat. A customer
+  who needs to send paperwork is pointed at your operations email address instead, and staff
+  attach documents to the shipment, where they belong and where access is checked.
+- **A conversation lives for 24 hours after its last message**, then it is deleted with every
+  message in it. Change the window with `CHAT_RETENTION_HOURS` in `.env` if you have a
+  reason to; it is configuration rather than a site setting, because it is a commitment to
+  your customers rather than a preference to fiddle with. The privacy policy page says
+  24 hours in so many words, so edit that text too if you change the value.
+- **Past that window nothing can open it** — not the customer who started it, not a
+  representative, not the master admin. The application treats an expired conversation as
+  already gone, so a cron job that failed to run cannot quietly keep a thread alive.
+- **The messages are not copied anywhere else.** The alert to your operations address and the
+  reply notification to the customer say that a message is waiting and link to it; neither
+  repeats what was written. The audit log records that a message was sent, on which shipment,
+  by whom — never its contents.
+- **Deletion is done by** `php artisan portlane:purge-chat`, hourly from the scheduler
+  (section 31). The chat also sweeps up while it is being used, at most once every fifteen
+  minutes, so a host without cron still clears itself.
+
+Anything that has to be kept — a delivery instruction, an address correction, a claim — is
+recorded on the shipment as a tracking event or a document before the conversation clears.
+Tell your representatives this during training: if it matters, it goes on the shipment.
 
 **Who can see which conversation**
 
@@ -1140,9 +1186,12 @@ under **Site settings → Tracking and chat**:
 - **Chat refresh interval** — 8000 milliseconds by default. `CHAT_POLL_INTERVAL` in `.env`
   sets the value used before anything is saved in the settings screen.
 
-Abuse protection: 10 messages a minute and 60 an hour per address, a hidden field that
-automated form fillers trip over, and attachment type and size validation. Access to a
-conversation needs both the tracking number and the session that created it.
+The retention window is not in the settings screen on purpose: it is `CHAT_RETENTION_HOURS`
+in `.env`, 24 by default.
+
+Abuse protection: 10 messages a minute and 60 an hour per address, and a hidden field that
+automated form fillers trip over. Access to a conversation needs both the tracking number
+and the session that created it.
 
 Moving to websockets later means replacing the fetch in `resources/js/chat.js` and the
 `messages` endpoint in `TrackingChatController` with a broadcast listener. The data model,
@@ -1301,6 +1350,10 @@ php artisan portlane:clear-demo-data
 The dashboard checklist reports sample data until it is gone. Records your own staff created
 are never touched by the clear command.
 
+The seeder also creates one sample conversation so the Messages screen is not empty. Like any
+conversation it is deleted 24 hours after its last message, so on a development install that
+has been sitting idle it will simply be gone; re-run the seeder if you want it back.
+
 ## 53. Database structure
 
 | Table | Holds |
@@ -1311,8 +1364,8 @@ are never touched by the clear command.
 | `shipment_statuses` | The configurable milestones and exceptions |
 | `shipment_events` | The tracking history, public wording and internal notes |
 | `shipment_documents` | Uploaded documents, their type, visibility and storage path |
-| `chat_conversations` | One conversation per customer enquiry, tied to a shipment |
-| `chat_messages` | Customer and staff messages, attachments and read state |
+| `chat_conversations` | One conversation per customer enquiry, tied to a shipment, deleted 24 hours after the last message |
+| `chat_messages` | Customer and staff messages and read state, deleted with the conversation |
 | `quote_requests` | Website quotation requests: contact, structured route, cargo details, status and handling |
 | `quote_replies` | Quotations sent to the customer from the admin panel, with rate, transit time and validity |
 | `contact_messages` | Website contact form messages |
@@ -1532,7 +1585,10 @@ the record. If you would rather answer from your phone, press Reply on the alert
 webmail; it is addressed to reply to the customer. Mark the request as quoted afterwards.
 Section 55 has the detail.
 
-**Customer messages.** **Messages** shows every conversation, with three views: all, assigned
+**Customer messages.** Conversations are temporary: each is deleted 24 hours after its last
+message, files cannot be sent through the chat, and nothing from a thread is copied into the
+alert emails. Anything worth keeping goes on the shipment as a tracking event or a document
+before the thread clears. **Messages** shows every conversation, with three views: all, assigned
 to me, and waiting to be picked up. Open one to read the thread, reply, and see the tracking
 details beside it. Use **Assign to** to hand it to a representative, or set it back to the
 unassigned queue. Close a conversation when it is finished; it reopens by itself if the
@@ -1580,8 +1636,9 @@ it up automatically.
 
 **Answering.** Open the conversation. You will see:
 
-- the whole thread, oldest first, with your replies on the right;
-- the reply box, where you can attach a PDF, image or spreadsheet;
+- the whole thread, oldest first, with your replies on the right, and the time it clears;
+- the reply box. There is no attachment field: files cannot be sent through the chat in
+  either direction;
 - **Shipment** — tracking number, status, route, current location, shipping method,
   estimated delivery and the customer's name, read only;
 - **Latest tracking updates** — the last few entries recorded by the operations desk;
@@ -1595,8 +1652,18 @@ shipment, so you can be answering one customer about a container and another abo
 consignment at the same time. The **Messages** screen lists them all, with filters for
 *assigned to me*, *waiting to be picked up*, open and closed.
 
+**Conversations do not last.** A conversation is deleted 24 hours after its last message,
+along with everything in it, so a customer's details do not sit on the server. The clearing
+time is shown at the top of every thread. **If something in a conversation matters — a
+corrected address, a delivery instruction, a complaint — tell the master admin so it is
+recorded on the shipment before the thread clears.** Once it is gone, nobody can get it back.
+
+If a customer wants to send a document, ask them to email it to the operations address with
+their tracking number; the master admin uploads it against the shipment.
+
 **Finishing.** Press **Close conversation** when the question is answered. If the customer
-writes again, it reopens automatically and comes back to you.
+writes again, it reopens automatically and comes back to you — until the thread clears, after
+which their next message starts a fresh conversation.
 
 **What to escalate.** Anything that needs the shipment file changed — a wrong delivery date,
 a missing document, a status that does not match reality — goes to the master admin. You can

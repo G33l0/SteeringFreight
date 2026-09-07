@@ -11,8 +11,6 @@ use App\Services\TrackingNumberGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Customer side of the shipment conversation.
@@ -20,6 +18,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Access needs two things: the tracking number in the URL and the conversation
  * token held in the visitor's session. Knowing a tracking number on its own is
  * never enough to read an existing conversation.
+ *
+ * Nothing can be uploaded here, and a conversation stops being readable once it
+ * is past the retention window, whether or not the scheduled purge has run.
  */
 class TrackingChatController extends Controller
 {
@@ -39,7 +40,6 @@ class TrackingChatController extends Controller
             'contact_email' => ['required', 'email:filter', 'max:180'],
             'subject' => ['nullable', 'string', 'max:180'],
             'body' => ['required', 'string', 'min:2', 'max:'.config('portlane.chat.message_max_length')],
-            'attachment' => $this->attachmentRules(),
             'website' => ['prohibited'],
         ], [
             'website.prohibited' => 'Your message could not be sent. Please try again.',
@@ -54,7 +54,6 @@ class TrackingChatController extends Controller
                 'body' => $validated['body'],
             ],
             $request,
-            $request->file('attachment'),
         );
 
         $this->chat->grantSessionAccess($request, $conversation);
@@ -72,10 +71,9 @@ class TrackingChatController extends Controller
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'min:2', 'max:'.config('portlane.chat.message_max_length')],
-            'attachment' => $this->attachmentRules(),
         ]);
 
-        $this->chat->addCustomerMessage($conversation, $validated['body'], $request, $request->file('attachment'));
+        $this->chat->addCustomerMessage($conversation, $validated['body'], $request);
 
         return redirect()
             ->route('track.show', $shipment->tracking_number)
@@ -105,35 +103,9 @@ class TrackingChatController extends Controller
                 'sender' => $message->fromStaff() ? company_name() : $message->sender_name,
                 'body' => $message->body,
                 'sent_at' => $message->created_at?->toDayDateTimeString(),
-                'attachment' => $message->hasAttachment() ? [
-                    'name' => $message->attachment_name,
-                    'url' => route('track.chat.attachment', [
-                        'tracking_number' => $shipment->tracking_number,
-                        'conversation' => $conversation->getKey(),
-                        'message' => $message->getKey(),
-                    ]),
-                ] : null,
             ])->values(),
+            'expires_at' => $conversation->expiresAt()->toIso8601String(),
         ]);
-    }
-
-    public function attachment(
-        Request $request,
-        string $tracking_number,
-        ChatConversation $conversation,
-        ChatMessage $message,
-    ): StreamedResponse {
-        $shipment = $this->shipment($tracking_number);
-        $this->authoriseConversation($request, $shipment, $conversation);
-
-        abort_unless($message->chat_conversation_id === $conversation->getKey(), 404);
-        abort_unless($message->hasAttachment(), 404);
-
-        $disk = Storage::disk(ChatService::DISK);
-
-        abort_unless($disk->exists($message->attachment_path), 404);
-
-        return $disk->download($message->attachment_path, $message->attachment_name);
     }
 
     private function shipment(string $trackingNumber): Shipment
@@ -144,17 +116,11 @@ class TrackingChatController extends Controller
     private function authoriseConversation(Request $request, Shipment $shipment, ChatConversation $conversation): void
     {
         abort_unless($conversation->shipment_id === $shipment->getKey(), 404);
-        abort_unless($this->chat->sessionOwnsConversation($request, $conversation), 403);
-    }
 
-    /** @return list<mixed> */
-    private function attachmentRules(): array
-    {
-        return [
-            'nullable',
-            'file',
-            'max:'.upload_max_kb(),
-            'mimes:'.implode(',', (array) config('portlane.uploads.document_mimes')),
-        ];
+        // Past the retention window the conversation is treated as gone, even
+        // if the scheduled purge has not deleted it yet.
+        abort_if($conversation->hasExpired(), 404);
+
+        abort_unless($this->chat->sessionOwnsConversation($request, $conversation), 403);
     }
 }

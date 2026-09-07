@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Schedule;
 |
 */
 
+// Clear the customer chat. Conversations are deleted once they are past the
+// retention window in config/portlane.php, which is 24 hours by default.
+Schedule::command('portlane:purge-chat')->hourly();
+
 // Remove expired password reset tokens.
 Schedule::command('auth:clear-resets')->daily();
 

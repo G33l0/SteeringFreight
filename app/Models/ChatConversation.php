@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ConversationStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\ChatConversationFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -89,6 +90,65 @@ class ChatConversation extends Model
     public function isOpen(): bool
     {
         return $this->status === ConversationStatus::Open;
+    }
+
+    /**
+     * When this conversation disappears. The chat is a short lived window, not
+     * a record: it is deleted a fixed number of hours after the last message so
+     * nothing a customer typed is kept on the server.
+     */
+    public function expiresAt(): CarbonInterface
+    {
+        return ($this->last_message_at ?? $this->created_at ?? now())->copy()->addHours(chat_retention_hours());
+    }
+
+    public function hasExpired(): bool
+    {
+        return $this->expiresAt()->isPast();
+    }
+
+    /**
+     * The cut off before which a conversation is treated as gone, whether or
+     * not the scheduled purge has run yet.
+     */
+    public static function retentionCutoff(): CarbonInterface
+    {
+        return now()->subHours(chat_retention_hours());
+    }
+
+    /**
+     * Conversations still inside the retention window. Everything else is
+     * unreadable on sight, so a missed cron run cannot keep a thread alive.
+     *
+     * @param  Builder<ChatConversation>  $query
+     */
+    public function scopeWithinRetention(Builder $query): void
+    {
+        $cutoff = static::retentionCutoff();
+
+        $query->where(function (Builder $query) use ($cutoff): void {
+            $query->where('last_message_at', '>', $cutoff)
+                ->orWhere(function (Builder $query) use ($cutoff): void {
+                    $query->whereNull('last_message_at')->where('created_at', '>', $cutoff);
+                });
+        });
+    }
+
+    /**
+     * Conversations past the retention window, ready to be deleted.
+     *
+     * @param  Builder<ChatConversation>  $query
+     */
+    public function scopeExpired(Builder $query): void
+    {
+        $cutoff = static::retentionCutoff();
+
+        $query->where(function (Builder $query) use ($cutoff): void {
+            $query->where('last_message_at', '<=', $cutoff)
+                ->orWhere(function (Builder $query) use ($cutoff): void {
+                    $query->whereNull('last_message_at')->where('created_at', '<=', $cutoff);
+                });
+        });
     }
 
     public function isAssigned(): bool

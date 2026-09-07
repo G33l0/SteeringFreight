@@ -45,3 +45,16 @@ if (! function_exists('chat_poll_interval')) {
         return max(2000, app(Settings::class)->int('tracking.chat_poll_interval', (int) config('portlane.chat.poll_interval')));
     }
 }
+
+if (! function_exists('chat_retention_hours')) {
+    /**
+     * How long a customer conversation stays readable before it is deleted.
+     *
+     * This is a privacy commitment rather than a preference, so it lives in
+     * configuration and is not editable from the admin panel.
+     */
+    function chat_retention_hours(): int
+    {
+        return max(1, (int) config('portlane.chat.retention_hours', 24));
+    }
+}

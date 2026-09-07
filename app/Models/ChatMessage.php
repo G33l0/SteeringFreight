@@ -19,10 +19,6 @@ class ChatMessage extends Model
         'user_id',
         'sender_name',
         'body',
-        'attachment_path',
-        'attachment_name',
-        'attachment_mime',
-        'attachment_size',
         'read_at',
         'ip_address',
     ];
@@ -35,7 +31,6 @@ class ChatMessage extends Model
         return [
             'sender_type' => MessageSender::class,
             'read_at' => 'datetime',
-            'attachment_size' => 'integer',
         ];
     }
 
@@ -54,10 +49,5 @@ class ChatMessage extends Model
     public function fromStaff(): bool
     {
         return $this->sender_type === MessageSender::Staff;
-    }
-
-    public function hasAttachment(): bool
-    {
-        return $this->attachment_path !== null;
     }
 }

@@ -63,7 +63,7 @@ This policy explains what personal information [[company.legal_name]] collects t
 
 - **Contact and quotation forms.** Your name, email address, telephone number, company name and the shipment details you send us.
 - **Shipment records.** The contact details recorded against a shipment by our staff so that we can carry out the transport instruction.
-- **Messages.** Messages you send from the tracking page, including any files you attach.
+- **Messages.** Messages you send from the tracking page. The tracking page chat does not accept files, and the conversation is deleted automatically 24 hours after the last message.
 - **Technical information.** The IP address a form was submitted from, used to limit abuse of the forms, and standard web server logs.
 
 ## Why we use it
@@ -77,6 +77,8 @@ Information is shared with the parties needed to move your cargo: carriers, airl
 ## How long we keep it
 
 Shipment records and the documents that go with them are kept for [[legal.retention_period]]. Quotation requests and website enquiries are kept while they are useful for the enquiry and its follow up, and are removed after that.
+
+Conversations in the tracking page chat are the exception: they are deleted, with every message in them, 24 hours after the last message. Anything from a conversation that we have to keep in order to move your cargo is recorded on the shipment itself before then.
 
 ## Cookies
 

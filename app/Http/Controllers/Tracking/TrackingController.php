@@ -58,6 +58,10 @@ class TrackingController extends Controller
             'customerDocuments',
         ]);
 
+        // Clear anything past the retention window before the chat is shown, in
+        // case the scheduler is not running on this host.
+        $chat->sweepExpired();
+
         $conversation = $this->currentConversation($request, $shipment, $chat);
 
         return view('public.track.show', [
@@ -96,6 +100,7 @@ class TrackingController extends Controller
         }
 
         $conversation = ChatConversation::query()
+            ->withinRetention()
             ->where('shipment_id', $shipment->getKey())
             ->whereIn('id', array_keys($tokens))
             ->latest('id')

@@ -164,6 +164,7 @@
                 <section id="conversation" class="scroll-mt-24">
                     <h2 class="font-display text-lg font-semibold">Contact the shipping team</h2>
                     <p class="mt-2 text-sm text-ink-600">{{ setting('tracking.support_note') }}</p>
+                    <x-chat-notice class="mt-2 max-w-2xl" />
 
                     @if (session('status'))
                         <x-alert class="mt-4">{{ session('status') }}</x-alert>

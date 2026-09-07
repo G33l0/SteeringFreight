@@ -12,25 +12,32 @@ use App\Notifications\NewCustomerMessage;
 use App\Notifications\StaffReplyPosted;
 use App\Support\Settings;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Str;
 
 /**
  * Customer chat.
  *
- * Messages are stored in the database and read back by the browser with short
- * polling, which works on any shared host. Nothing in the controllers depends
- * on the transport, so broadcasting can be added later without touching the
- * data model.
+ * Messages are read back by the browser with short polling, which works on any
+ * shared host. Nothing in the controllers depends on the transport, so
+ * broadcasting can be added later without touching the data model.
+ *
+ * The chat is a window, not a record. A conversation lives for
+ * `portlane.chat.retention_hours` after its last message and is then deleted
+ * with everything in it, so nothing a customer wrote is kept. Files cannot be
+ * sent through it at all.
  */
 class ChatService
 {
-    public const DISK = 'local';
-
     /** Session key holding the conversation tokens this visitor owns. */
     public const SESSION_KEY = 'chat.tokens';
+
+    /** How long the throttled sweep waits between runs, in seconds. */
+    private const SWEEP_INTERVAL = 900;
+
+    /** Cache key guarding that sweep. */
+    private const SWEEP_KEY = 'chat.last_sweep';
 
     public function __construct(
         private readonly AuditLogger $audit,
@@ -40,9 +47,9 @@ class ChatService
     /**
      * @param  array{contact_name: string, contact_email: string, subject?: string|null, body: string}  $data
      */
-    public function startConversation(Shipment $shipment, array $data, Request $request, ?UploadedFile $attachment = null): ChatConversation
+    public function startConversation(Shipment $shipment, array $data, Request $request): ChatConversation
     {
-        return DB::transaction(function () use ($shipment, $data, $request, $attachment): ChatConversation {
+        return DB::transaction(function () use ($shipment, $data, $request): ChatConversation {
             $conversation = $shipment->conversations()->create([
                 'customer_id' => $shipment->customer_id,
                 'subject' => $data['subject'] ?? null,
@@ -52,25 +59,21 @@ class ChatService
                 'ip_address' => $request->ip(),
             ]);
 
-            $this->addCustomerMessage($conversation, $data['body'], $request, $attachment);
+            $this->addCustomerMessage($conversation, $data['body'], $request);
 
             return $conversation->refresh();
         });
     }
 
-    public function addCustomerMessage(
-        ChatConversation $conversation,
-        string $body,
-        Request $request,
-        ?UploadedFile $attachment = null,
-    ): ChatMessage {
-        $message = DB::transaction(function () use ($conversation, $body, $request, $attachment): ChatMessage {
-            $message = $this->createMessage($conversation, [
+    public function addCustomerMessage(ChatConversation $conversation, string $body, Request $request): ChatMessage
+    {
+        $message = DB::transaction(function () use ($conversation, $body, $request): ChatMessage {
+            $message = $conversation->messages()->create([
                 'sender_type' => MessageSender::Customer,
                 'sender_name' => $conversation->contact_name,
                 'body' => $body,
                 'ip_address' => $request->ip(),
-            ], $attachment);
+            ]);
 
             $conversation->forceFill([
                 'last_message_at' => now(),
@@ -95,19 +98,15 @@ class ChatService
         return $message;
     }
 
-    public function addStaffMessage(
-        ChatConversation $conversation,
-        string $body,
-        User $user,
-        ?UploadedFile $attachment = null,
-    ): ChatMessage {
-        $message = DB::transaction(function () use ($conversation, $body, $user, $attachment): ChatMessage {
-            $message = $this->createMessage($conversation, [
+    public function addStaffMessage(ChatConversation $conversation, string $body, User $user): ChatMessage
+    {
+        $message = DB::transaction(function () use ($conversation, $body, $user): ChatMessage {
+            $message = $conversation->messages()->create([
                 'sender_type' => MessageSender::Staff,
                 'user_id' => $user->getKey(),
                 'sender_name' => $user->name,
                 'body' => $body,
-            ], $attachment);
+            ]);
 
             $conversation->forceFill([
                 'last_message_at' => now(),
@@ -121,7 +120,7 @@ class ChatService
         $this->audit->record(
             'chat.staff_message',
             $conversation->shipment,
-            "Replied to {$conversation->contact_name} on {$conversation->shipment->tracking_number}",
+            "Replied to the customer on {$conversation->shipment->tracking_number}",
             ['conversation_id' => $conversation->getKey()],
             $user,
         );
@@ -169,8 +168,8 @@ class ChatService
             $assignee ? 'chat.assigned' : 'chat.unassigned',
             $conversation->shipment,
             $assignee
-                ? "Assigned the conversation with {$conversation->contact_name} to {$assignee->name}"
-                : "Returned the conversation with {$conversation->contact_name} to the unassigned queue",
+                ? "Assigned the conversation on {$conversation->shipment->tracking_number} to {$assignee->name}"
+                : "Returned the conversation on {$conversation->shipment->tracking_number} to the unassigned queue",
             ['conversation_id' => $conversation->getKey(), 'assigned_to' => $assignee?->getKey()],
             $actor,
         );
@@ -187,7 +186,7 @@ class ChatService
         $this->audit->record(
             'chat.closed',
             $conversation->shipment,
-            "Closed conversation with {$conversation->contact_name}",
+            "Closed the conversation on {$conversation->shipment->tracking_number}",
             ['conversation_id' => $conversation->getKey()],
             $user,
         );
@@ -204,7 +203,7 @@ class ChatService
         $this->audit->record(
             'chat.reopened',
             $conversation->shipment,
-            "Reopened conversation with {$conversation->contact_name}",
+            "Reopened the conversation on {$conversation->shipment->tracking_number}",
             ['conversation_id' => $conversation->getKey()],
             $user,
         );
@@ -231,22 +230,43 @@ class ChatService
     }
 
     /**
-     * @param  array<string, mixed>  $attributes
+     * Delete every conversation past the retention window, with its messages.
+     *
+     * @return int the number of conversations removed
      */
-    private function createMessage(ChatConversation $conversation, array $attributes, ?UploadedFile $attachment): ChatMessage
+    public function purgeExpired(): int
     {
-        if ($attachment) {
-            $attributes['attachment_path'] = $attachment->storeAs(
-                'chat/'.$conversation->getKey(),
-                Str::ulid()->toBase32().'.'.(preg_replace('/[^a-z0-9]/', '', strtolower($attachment->getClientOriginalExtension())) ?: 'bin'),
-                ['disk' => self::DISK],
-            );
-            $attributes['attachment_name'] = Str::limit(str_replace(['/', '\\', "\0"], '', $attachment->getClientOriginalName()), 180, '');
-            $attributes['attachment_mime'] = $attachment->getClientMimeType();
-            $attributes['attachment_size'] = $attachment->getSize();
+        $removed = 0;
+
+        ChatConversation::query()
+            ->expired()
+            ->select('id')
+            ->chunkById(200, function ($conversations) use (&$removed): void {
+                $ids = $conversations->modelKeys();
+
+                DB::transaction(function () use ($ids, &$removed): void {
+                    ChatMessage::whereIn('chat_conversation_id', $ids)->delete();
+                    $removed += ChatConversation::whereIn('id', $ids)->delete();
+                });
+            });
+
+        return $removed;
+    }
+
+    /**
+     * The same purge, run at most once every SWEEP_INTERVAL seconds.
+     *
+     * The scheduled command is the proper mechanism, but shared hosting cron is
+     * easy to forget, so the chat also tidies up after itself while it is being
+     * used. Conversations past the window are already unreadable either way.
+     */
+    public function sweepExpired(): void
+    {
+        if (! Cache::add(self::SWEEP_KEY, now()->toIso8601String(), self::SWEEP_INTERVAL)) {
+            return;
         }
 
-        return $conversation->messages()->create($attributes);
+        $this->purgeExpired();
     }
 
     private function notifyStaff(ChatConversation $conversation, ChatMessage $message): void

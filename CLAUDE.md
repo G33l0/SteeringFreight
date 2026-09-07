@@ -32,6 +32,13 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   `ChatConversationPolicy` is the single place that decides this, and
   `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an
   unassigned conversation claims it.
+- The customer chat is a window, not a record. It accepts no files at all, and a conversation
+  is deleted with its messages `portlane.chat.retention_hours` (24) after its last message —
+  `portlane:purge-chat` hourly, plus `ChatService::sweepExpired()` while the chat is used.
+  Past that window `hasExpired()` makes it unreadable to everyone, so a missed cron run never
+  keeps a thread alive; `scopeWithinRetention()` is the matching query scope. Message bodies
+  are never copied into notification emails or the audit log, and the audit descriptions
+  reference the tracking number rather than the customer's name.
 - Every administrative write is recorded through `AuditLogger`. Never log credentials.
 - Customer facing text comes from the database: site settings, services, pages, FAQs and
   shipment records. Do not hard code company details in templates.
@@ -48,8 +55,8 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   ship empty; the views hide those sections until they are filled in.
 - Brand colours are published as CSS custom properties from the settings, so the palette is
   changeable without a front end rebuild.
-- Private files (shipment documents, chat attachments) live on the `local` disk and are
-  only ever streamed by a controller that checks authorisation.
+- Private files (shipment documents) live on the `local` disk and are only ever streamed
+  by a controller that checks authorisation. The chat stores no files at all.
 - Tests run on SQLite in memory. `Tests\TestCase` provides `seedCoreData()`,
   `administrator()`, `agent()` and `trackingStatus()`.
 

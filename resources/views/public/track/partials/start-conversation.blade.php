@@ -6,7 +6,7 @@
 
     <form x-show="open" x-cloak method="POST"
           action="{{ route('track.chat.store', ['tracking_number' => $shipment->tracking_number]) }}"
-          enctype="multipart/form-data" class="space-y-4 border border-ink-100 bg-white p-5">
+          class="space-y-4 border border-ink-100 bg-white p-5">
         @csrf
         <x-form.honeypot />
 
@@ -30,11 +30,6 @@
         <x-form.field name="body" label="Message" :required="true">
             <textarea id="body" name="body" rows="4" required maxlength="{{ config('portlane.chat.message_max_length') }}"
                       class="textarea" aria-invalid="{{ $errors->has('body') ? 'true' : 'false' }}">{{ old('body') }}</textarea>
-        </x-form.field>
-
-        <x-form.field name="attachment" label="Attach a document"
-                      help="PDF, image or spreadsheet, up to {{ round(upload_max_kb() / 1024) }} MB.">
-            <input type="file" id="attachment" name="attachment" class="input py-2 text-sm">
         </x-form.field>
 
         <div class="flex items-center gap-3">

@@ -130,7 +130,7 @@ class CustomerChatTest extends TestCase
             ->assertSee('The container is booked on the Friday sailing.');
     }
 
-    public function test_chat_attachments_are_stored_privately_and_need_the_session(): void
+    public function test_files_cannot_be_sent_through_the_chat(): void
     {
         Storage::fake('local');
 
@@ -144,21 +144,19 @@ class CustomerChatTest extends TestCase
             'attachment' => UploadedFile::fake()->create('packing-list.pdf', 40, 'application/pdf'),
         ])->assertRedirect();
 
-        $message = ChatMessage::firstOrFail();
-        $this->assertNotNull($message->attachment_path);
-        Storage::disk('local')->assertExists($message->attachment_path);
+        // The message goes through; the file is ignored and never written.
+        $this->assertSame(1, ChatMessage::count());
+        $this->assertEmpty(Storage::disk('local')->allFiles());
+    }
 
-        $url = route('track.chat.attachment', [
-            'tracking_number' => $shipment->tracking_number,
-            'conversation' => $message->chat_conversation_id,
-            'message' => $message,
-        ]);
+    public function test_the_tracking_page_says_the_conversation_is_cleared(): void
+    {
+        $shipment = Shipment::factory()->create();
 
-        $this->get($url)->assertOk();
-
-        // A visitor without the conversation in their session is refused.
-        $this->flushSession();
-        $this->get($url)->assertForbidden();
+        $this->get(route('track.show', $shipment->tracking_number))
+            ->assertOk()
+            ->assertSee('cleared automatically '.chat_retention_hours().' hours after the last message')
+            ->assertSee('files cannot be sent through it');
     }
 
     public function test_message_sending_is_rate_limited(): void

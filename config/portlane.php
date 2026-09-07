@@ -88,12 +88,18 @@ return [
     | without a websocket server. The transport is isolated behind the chat
     | controller, so it can be swapped for broadcasting later on.
     |
+    | The chat is deliberately short lived. A conversation is readable for
+    | `retention_hours` after its last message and is then deleted, messages and
+    | all, so nothing a customer types stays on the server. Files cannot be sent
+    | through the chat at all; shipment documents are uploaded by staff and are
+    | kept with the shipment instead.
+    |
     */
 
     'chat' => [
         'poll_interval' => (int) env('CHAT_POLL_INTERVAL', 8000),
         'message_max_length' => 4000,
-        'attachments' => true,
+        'retention_hours' => max(1, (int) env('CHAT_RETENTION_HOURS', 24)),
     ],
 
     /*

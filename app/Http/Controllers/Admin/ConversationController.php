@@ -6,7 +6,6 @@ use App\Enums\ConversationStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
-use App\Models\ChatMessage;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Services\ChatService;
@@ -15,9 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConversationController extends Controller
 {
@@ -27,11 +24,16 @@ class ConversationController extends Controller
     {
         $this->authorize('viewAny', ChatConversation::class);
 
+        // Tidy up while somebody is looking at the queue, in case the scheduler
+        // is not running on this host.
+        $this->chat->sweepExpired();
+
         $user = $request->user();
         $status = $request->string('status')->value();
         $queue = $request->string('queue')->value();
 
         $conversations = ChatConversation::query()
+            ->withinRetention()
             ->with(['shipment.status', 'latestMessage', 'assignee'])
             ->unless($user->hasPermission('chat.manage'), fn (Builder $query) => $query->forRepresentative($user))
             ->when($queue === 'mine', fn (Builder $query) => $query->assignedTo($user))
@@ -64,6 +66,7 @@ class ConversationController extends Controller
 
     public function show(Request $request, ChatConversation $conversation): View
     {
+        abort_if($conversation->hasExpired(), 404);
         $this->authorize('view', $conversation);
 
         $conversation->load(['messages.user', 'shipment.status', 'shipment.customer', 'assignee']);
@@ -80,15 +83,11 @@ class ConversationController extends Controller
 
     public function reply(Request $request, ChatConversation $conversation): RedirectResponse
     {
+        abort_if($conversation->hasExpired(), 404);
         $this->authorize('reply', $conversation);
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'min:1', 'max:'.config('portlane.chat.message_max_length')],
-            'attachment' => [
-                'nullable', 'file',
-                'max:'.upload_max_kb(),
-                'mimes:'.implode(',', (array) config('portlane.uploads.document_mimes')),
-            ],
         ]);
 
         // Answering an unassigned conversation claims it.
@@ -96,7 +95,7 @@ class ConversationController extends Controller
             $this->chat->assign($conversation, $request->user(), $request->user());
         }
 
-        $this->chat->addStaffMessage($conversation, $validated['body'], $request->user(), $request->file('attachment'));
+        $this->chat->addStaffMessage($conversation, $validated['body'], $request->user());
 
         return redirect()->route('admin.messages.show', $conversation)->with('status', 'Reply sent.');
     }
@@ -185,19 +184,6 @@ class ConversationController extends Controller
         return redirect()->route('admin.messages.show', $conversation)->with('status', 'Message sent to the customer.');
     }
 
-    public function attachment(ChatConversation $conversation, ChatMessage $message): StreamedResponse
-    {
-        $this->authorize('view', $conversation);
-
-        abort_unless($message->chat_conversation_id === $conversation->getKey(), 404);
-        abort_unless($message->hasAttachment(), 404);
-
-        $disk = Storage::disk(ChatService::DISK);
-        abort_unless($disk->exists($message->attachment_path), 404);
-
-        return $disk->download($message->attachment_path, $message->attachment_name);
-    }
-
     /**
      * Staff a conversation can be handed to. Only a master admin sees the list.
      *
@@ -222,6 +208,7 @@ class ConversationController extends Controller
     private function queueCounts(User $user): array
     {
         $scope = fn () => ChatConversation::query()
+            ->withinRetention()
             ->unless($user->hasPermission('chat.manage'), fn (Builder $query) => $query->forRepresentative($user));
 
         return [

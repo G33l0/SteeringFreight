@@ -92,8 +92,6 @@ Route::prefix('track/{tracking_number}')->name('track.')->group(function (): voi
     Route::post('conversations/{conversation}/messages', [TrackingChatController::class, 'reply'])
         ->middleware('throttle:chat')
         ->name('chat.reply');
-    Route::get('conversations/{conversation}/messages/{message}/attachment', [TrackingChatController::class, 'attachment'])
-        ->name('chat.attachment');
 });
 
 /*
@@ -156,7 +154,6 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('messages/{conversation}/claim', [ConversationController::class, 'claim'])->name('messages.claim');
         Route::post('messages/{conversation}/close', [ConversationController::class, 'close'])->name('messages.close');
         Route::post('messages/{conversation}/reopen', [ConversationController::class, 'reopen'])->name('messages.reopen');
-        Route::get('messages/{conversation}/attachments/{message}', [ConversationController::class, 'attachment'])->name('messages.attachment');
 
         Route::get('documents', [DocumentLibraryController::class, 'index'])->name('documents.index');
 
