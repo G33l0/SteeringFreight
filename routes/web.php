@@ -144,7 +144,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('shipments/{shipment}/conversations', [ConversationController::class, 'storeForShipment'])->name('shipments.conversations.store');
 
         Route::resource('customers', CustomerController::class);
-        Route::resource('statuses', ShipmentStatusController::class)->parameters(['statuses' => 'status']);
+        // No show screen: a status is edited in place from the list.
+        Route::resource('statuses', ShipmentStatusController::class)->except(['show'])->parameters(['statuses' => 'status']);
 
         // Customer messages.
         Route::get('messages', [ConversationController::class, 'index'])->name('messages.index');
