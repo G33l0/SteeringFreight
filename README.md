@@ -95,6 +95,10 @@ invented by the application: statuses, locations and descriptions are entered by
 
 62. [Running on SQLite in production](#62-running-on-sqlite-in-production)
 
+**Putting it online**
+
+63. [A free preview deployment](#63-a-free-preview-deployment)
+
 ---
 
 ## 1. Project overview
@@ -1795,6 +1799,93 @@ such; they are the points where a database server starts paying for itself:
 one engine: create the MySQL database (section 9), point `.env` at it, run
 `php artisan migrate --force`, and re-enter or import your data. Do it before the archive
 gets large rather than after.
+
+---
+
+## 63. A free preview deployment
+
+Before buying hosting and a domain, you can put the site on a free platform host
+in about ten minutes and send people a link. Two files in the repository exist
+only for this: `Dockerfile` and `render.yaml`. Shared hosting does not use them —
+that is sections 28 to 31.
+
+**Know what you are getting.** A free instance goes to sleep after fifteen
+minutes with no traffic and takes about a minute to wake, and its disk is wiped
+on every restart and redeploy. The database is therefore rebuilt from scratch
+each time it wakes, with the sample shipments back in place: anything you type
+into a preview is gone by the next morning. That is fine for showing the design
+and the workflow, and it is why the real site goes somewhere else.
+
+### Steps
+
+1. **Make an application key.** On any machine with a terminal:
+
+   ```sh
+   echo "base64:$(openssl rand -base64 32)"
+   ```
+
+   Copy the whole line, `base64:` included. Keep it: it encrypts sessions.
+
+2. **Sign up at [render.com](https://render.com)** with your GitHub account and
+   give it access to the repository. No card is needed for the free plan.
+
+3. **New → Web Service → pick this repository.** Render reads `render.yaml` and
+   fills in the rest. If it asks, the settings are: language **Docker**, branch
+   **main**, plan **Free**, health check path **/up**.
+
+4. **Fill in the four values it asks for**, which are deliberately not in the
+   repository:
+
+   | Variable | What to put |
+   | --- | --- |
+   | `APP_KEY` | the line from step 1 |
+   | `APP_URL` | `https://your-service-name.onrender.com` |
+   | `ADMIN_EMAIL` | the address you will sign in with |
+   | `ADMIN_PASSWORD` | at least 8 characters, and not one you use elsewhere |
+
+   Everything else is already set in `render.yaml`.
+
+5. **Deploy.** The first build takes a few minutes. The log ends with the
+   migrations running, the sample data being seeded and your administrator being
+   created.
+
+6. **Check it.** Open the URL. The homepage, services, FAQ and reviews should
+   render; the tracking page finds the sample tracking numbers, which are marked
+   as demonstration shipments on screen. Sign in at `/admin/login` with the
+   address and password from step 4 and change the password under **Your
+   profile**.
+
+7. **Before you send the link.** `APP_DEBUG` is already false, so a mistake shows
+   the plain error page rather than a stack trace. Turn off **Allow search
+   engines to index the site** under **Site settings → Search and social**, so a
+   preview full of sample shipments does not end up in Google under your name.
+
+### What is different from the real thing
+
+| | Free preview | Real hosting |
+| --- | --- | --- |
+| Data | wiped on every restart | kept, and backed up |
+| First request after idle | about a minute | immediate |
+| Email | written to the log, nothing sent | real SMTP (section 19) |
+| Documents uploaded | lost on restart | kept in `storage/app` |
+| Demo data | on, so the site is never empty | removed (section 52) |
+
+### Moving to the real site later
+
+Nothing about the preview locks you in. When the domain and hosting are ready,
+follow sections 28 to 31, set up a real database (section 9), and enter your own
+content: the preview holds nothing worth migrating. Delete the Render service
+when you are done with it, or leave it as a staging copy.
+
+### Other free options
+
+- **A free shared host with a control panel** (InfinityFree and similar) is the
+  closest rehearsal for cPanel: PHP 8.3, MySQL, a free subdomain and free SSL,
+  and the data persists. There is no SSH, so follow the no SSH procedure in
+  section 30 — build on your own machine and upload.
+- **Oracle Cloud Always Free** gives you a real VM that does not sleep or lose
+  its disk, at the price of setting up nginx, PHP and certificates yourself.
+  Closest to production, most work.
 
 ---
 
