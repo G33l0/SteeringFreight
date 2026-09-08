@@ -98,6 +98,7 @@ invented by the application: statuses, locations and descriptions are entered by
 **Putting it online**
 
 63. [A free preview deployment](#63-a-free-preview-deployment)
+64. [What it costs to run](#64-what-it-costs-to-run)
 
 ---
 
@@ -498,11 +499,58 @@ MAIL_HOST=smtp.yourhost.com
 MAIL_PORT=587
 MAIL_USERNAME=no-reply@example.com
 MAIL_PASSWORD=your-mailbox-password
-MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="no-reply@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
 MAIL_ADMIN_ADDRESS="operations@example.com"
 ```
+
+On port 587 the connection is upgraded to TLS automatically, so no encryption setting is
+needed. Only if your provider insists on the older port 465 add `MAIL_SCHEME=smtps`. (This
+framework reads `MAIL_SCHEME`; the `MAIL_ENCRYPTION` line you may have seen in older Laravel
+guides is ignored.)
+
+### Recommended: send through Brevo
+
+Your host's own mailbox will send mail, but shared hosting IPs are shared with everyone else
+on the server, so a quote reply can land in spam through no fault of yours. A dedicated
+sending service fixes that, and at this volume it costs nothing: Brevo's free plan allows
+300 emails a day, which is far beyond what a freight desk sends, and includes the SMTP relay,
+domain authentication and a log of everything sent. No card is required.
+
+1. Create an account at [brevo.com](https://www.brevo.com) and verify your email address.
+2. **Senders, Domains & Dedicated IPs → Domains → Add a domain.** Enter your domain and add
+   the DNS records it gives you (a DKIM record, a Brevo verification record, and an SPF
+   entry) at whoever runs your DNS. Wait for all three to show as verified. Skipping this is
+   the single most common reason mail from a new site goes to spam.
+3. **SMTP & API → SMTP → Generate a new SMTP key.** Copy it once; it is not shown again.
+4. Put it in `.env` (the username is your Brevo account login, the password is the SMTP key,
+   never your account password):
+
+   ```dotenv
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp-relay.brevo.com
+   MAIL_PORT=587
+   MAIL_USERNAME=you@yourdomain.com      # your Brevo login
+   MAIL_PASSWORD=xsmtpsib-…              # the SMTP key from step 3
+   MAIL_FROM_ADDRESS="no-reply@yourdomain.com"
+   MAIL_FROM_NAME="${APP_NAME}"
+   MAIL_ADMIN_ADDRESS="operations@yourdomain.com"
+   ```
+
+   `MAIL_FROM_ADDRESS` must be on the domain you authenticated in step 2.
+5. Clear the cached configuration and send a test:
+
+   ```sh
+   php artisan config:clear
+   php artisan tinker --execute="Mail::raw('Test from Portlane.', fn (\$m) => \$m->to('you@yourdomain.com')->subject('Portlane test'));"
+   ```
+
+   The mail should arrive within a few seconds, and appear under **Transactional → Logs** in
+   Brevo. If it does not, the log there tells you why, which is more than a shared host will.
+
+**Receiving mail** is a separate job. Brevo sends; it does not give you an inbox. For
+`info@yourdomain.com` either use the mailboxes included with your hosting plan, or point your
+domain's MX records at Cloudflare Email Routing, which forwards to a Gmail address for free.
 
 Customer update emails are **off out of the box**. Once mail is working, go to
 **Site settings → Notifications**, set the internal notification address and switch on
@@ -1872,9 +1920,9 @@ and the workflow, and it is why the real site goes somewhere else.
 
 ### Moving to the real site later
 
-Nothing about the preview locks you in. When the domain and hosting are ready,
-follow sections 28 to 31, set up a real database (section 9), and enter your own
-content: the preview holds nothing worth migrating. Delete the Render service
+Section 64 is what that costs. Nothing about the preview locks you in: when the domain and
+hosting are ready, follow sections 28 to 31, set up a real database (section 9), and enter
+your own content, since the preview holds nothing worth migrating. Delete the Render service
 when you are done with it, or leave it as a staging copy.
 
 ### Other free options
@@ -1886,6 +1934,92 @@ when you are done with it, or leave it as a staging copy.
 - **Oracle Cloud Always Free** gives you a real VM that does not sleep or lose
   its disk, at the price of setting up nginx, PHP and certificates yourself.
   Closest to production, most work.
+
+---
+
+## 64. What it costs to run
+
+This application is cheap to run on purpose. It needs no database server (SQLite, section
+62), no queue worker, no websocket server and no Node process — the front end assets are
+built and committed. What is left is PHP, about half a gigabyte of disk and one cron entry,
+which is the smallest hosting anybody sells.
+
+Prices below were checked in September 2026 and are in US dollars. Treat them as the shape
+of the bill rather than a quote.
+
+### The bill
+
+| | Cheapest that is real | No server administration |
+| --- | --- | --- |
+| Hosting | Oracle Cloud Always Free VM — **$0** | Shared cPanel — **$24–58/yr** |
+| Domain (.com) | **$10/yr** | **$10/yr** |
+| Sending email (Brevo free) | **$0** | **$0** |
+| Receiving email | Cloudflare Email Routing — **$0** | usually included |
+| TLS certificate | Let's Encrypt — **$0** | included |
+| Backups | `portlane:backup-database` — **$0** | included |
+| **Total, first year** | **~$10** | **~$35** |
+| **Total, later years** | **~$10** | **~$58–68** |
+| What you give up | you install and patch the server yourself | about $4 a month |
+
+The floor for a real, public site is therefore **the domain, around $10 a year**. Everything
+else can genuinely be free at this volume.
+
+The free preview in section 63 costs nothing at all, but it sleeps when idle and loses its
+disk on every restart, so it is for showing people the site, not for running it.
+
+### Where the money actually goes
+
+**Domain, ~$10/yr, unavoidable.** Buy where registration and renewal are the same price:
+Cloudflare Registrar sells at cost (about $10.44 for .com, no year-two markup), Porkbun and
+Spaceship are close. Avoid the registrars advertising $2 for the first year and charging $18
+after. Do not save $8 on a `.site` or `.online`: a freight company is judged on its address.
+
+**Hosting, $0–5/mo.** Shared cPanel from about $2 a month for the first year and $4–5 after,
+which is what sections 28 to 31 are written for. Oracle Cloud's Always Free tier gives a
+permanent virtual machine — currently two ARM cores and 12 GB of memory, cut from four and
+24 GB in June 2026 — which is far more than this site needs and costs nothing, in exchange
+for installing nginx, PHP and certificates yourself and patching them forever.
+
+**Email, $0.** Brevo's free plan sends 300 emails a day, which this site will not approach,
+and gives you SPF and DKIM authentication and a delivery log. Section 19 has the setup.
+Receiving is separate: use the mailboxes that come with your hosting, or point your MX
+records at Cloudflare Email Routing and have `info@` forwarded to Gmail for nothing.
+
+### Paying with cryptocurrency
+
+The email provider is free, so the only two bills are the domain and the hosting, and both
+can be paid in crypto:
+
+| | Accepts | Notes |
+| --- | --- | --- |
+| **Namecheap** | BTC, via account credit | Domains and cPanel hosting from one account: fund the account balance with crypto, then pay for both from it, including auto renewal. The simplest single-vendor answer. |
+| **Dynadot** | BTC, USDT, USDC, at checkout | Domains only, cheap renewals, crypto selectable during checkout rather than as a top up. |
+| **Hostinger** | 50+ coins, via CoinGate | Hosting only, and it uses hPanel rather than cPanel, so the control panel screens in section 30 will look different. |
+| **Vultr** | BTC, via BitPay | A VPS rather than shared hosting: you administer the server, as with Oracle. |
+| **Njalla** | BTC, LTC, XMR, ETH | Privacy focused, around €15/yr, and it registers the domain on your behalf rather than in your name — read what that means for ownership before using it for a company domain. |
+
+**A crypto-payable setup, end to end:** fund a Namecheap account balance with Bitcoin, buy
+the domain and the Stellar shared hosting plan from that balance, and send mail through
+Brevo's free plan. That is roughly $35 for the first year and $58 for the second, paid
+entirely in crypto, with cPanel and the deployment steps in sections 28 to 31 matching what
+you see on screen.
+
+Two cautions. Exchange rates move while a payment confirms, so pay from a stablecoin such as
+USDT where the provider accepts one. And a provider can stop accepting crypto at any time —
+check at the checkout rather than trusting this table, and keep a card or PayPal available
+for a renewal you cannot afford to miss.
+
+### Costs that surprise people
+
+- **Shared hosting renewals roughly double.** The advertised price is the first term only.
+  Paying for three years up front at the promotional rate is the usual way around it.
+- **Domain year two**, for the same reason. Buy where the two prices match.
+- **Brevo's 300 a day is shared** across transactional and any marketing sending you add
+  later.
+- **Oracle reclaims idle Always Free instances** and has already cut the allowance once.
+  Free, but not a promise.
+- **Nothing here needs a paid SSL certificate, a CDN, or a "performance" add-on.** If a host
+  tries to sell you one for a site this size, decline.
 
 ---
 
