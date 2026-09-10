@@ -1,6 +1,9 @@
 <x-layouts.public :metaTitle="$metaTitle" :metaDescription="$metaDescription">
     @php
-        $heroImage = \App\Services\MediaService::url(setting('home.hero_image'));
+        // A photograph of the operation ships with the application; the setting
+        // replaces it when the business uploads one of its own.
+        $heroImage = \App\Services\MediaService::url(setting('home.hero_image'))
+            ?? asset('assets/photos/hero.webp');
         $whyPoints = settings()->list('home.why_points');
         $destinations = settings()->list('home.destinations');
         $trackingSteps = [
@@ -13,11 +16,8 @@
     {{-- Hero --}}
     <section class="relative isolate overflow-hidden bg-ink-950">
         <div class="absolute inset-0 -z-10">
-            @if ($heroImage)
-                <img src="{{ $heroImage }}" alt="" class="h-full w-full object-cover opacity-40">
-            @else
-                <x-art.harbour class="h-full w-full object-cover" />
-            @endif
+            <img src="{{ $heroImage }}" alt="" class="h-full w-full object-cover opacity-40"
+                 width="1800" height="900" fetchpriority="high">
             <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/75 to-ink-950/10"></div>
         </div>
 

@@ -4,10 +4,16 @@
         :title="$page?->title ?? 'About '.company_name()"
         :intro="$page?->intro ?? setting('company.tagline')" />
 
+    @php
+        // A photograph of a container terminal ships with the application; the
+        // About page banner setting replaces it with the company's own.
+        $banner = \App\Services\MediaService::url(setting('company.about_image'));
+    @endphp
+
     <div class="mx-auto max-w-6xl px-6 pt-10">
-        <img src="{{ asset('assets/illustrations/port-operations.svg') }}"
-             alt="Container terminal with gantry cranes, stacked containers and a berthed vessel"
-             class="w-full rounded object-cover" width="1200" height="500">
+        <img src="{{ $banner ?? asset('assets/photos/about-banner.webp') }}"
+             alt="{{ $banner ? '' : 'A container terminal seen from above: quay cranes along the berth, a vessel alongside and rows of stacked containers' }}"
+             class="aspect-[12/5] w-full rounded object-cover" width="1800" height="750" loading="lazy">
     </div>
 
     <div class="mx-auto grid max-w-6xl gap-12 px-6 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:py-20">

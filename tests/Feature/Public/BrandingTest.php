@@ -25,7 +25,7 @@ class BrandingTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('assets/brand/portlane-og.png', false)
+            ->assertSee('assets/brand/portlane-og.jpg', false)
             ->assertSee('favicon.svg', false);
     }
 
@@ -44,14 +44,15 @@ class BrandingTest extends TestCase
     {
         $this->seed(ServiceSeeder::class);
 
-        $service = Service::where('slug', 'sea-freight')->firstOrFail();
+        // A service added after the application shipped has no photograph.
+        $service = Service::factory()->create(['slug' => 'project-cargo', 'is_published' => true]);
 
-        $this->assertStringContainsString('assets/illustrations/sea-freight.svg', $service->imageUrl());
+        $this->assertStringContainsString('assets/illustrations/cargo-handling.svg', $service->imageUrl());
         $this->assertFalse($service->hasUploadedImage());
 
         $this->get(route('services.show', $service))
             ->assertOk()
-            ->assertSee('assets/illustrations/sea-freight.svg', false);
+            ->assertSee('assets/illustrations/cargo-handling.svg', false);
     }
 
     public function test_an_unknown_service_slug_still_gets_artwork(): void

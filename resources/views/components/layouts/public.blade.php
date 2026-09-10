@@ -17,7 +17,7 @@
     <meta property="og:title" content="{{ $metaTitle ?? company_name() }}">
     <meta property="og:description" content="{{ $metaDescription ?? setting('seo.meta_description') }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ \App\Services\MediaService::url(setting('seo.og_image')) ?? asset('assets/brand/portlane-og.png') }}">
+    <meta property="og:image" content="{{ \App\Services\MediaService::url(setting('seo.og_image')) ?? asset('assets/brand/portlane-og.jpg') }}">
     <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
