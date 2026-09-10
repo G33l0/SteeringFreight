@@ -44,17 +44,20 @@ class BrandingTest extends TestCase
     {
         $this->seed(ServiceSeeder::class);
 
-        // A service that has no bundled photograph yet: photographs arrive one at
-        // a time, and until one does the drawn artwork stands in.
-        $service = Service::where('slug', 'customs-clearance')->firstOrFail();
+        // Found rather than named: photographs arrive one at a time, so which
+        // service is still on artwork keeps changing.
+        $service = Service::published()->get()->first(fn (Service $s) => $s->bundledPhotoPath() === null);
 
-        $this->assertNull($service->bundledPhotoPath());
-        $this->assertStringContainsString('assets/illustrations/customs-clearance.svg', $service->imageUrl());
+        if (! $service) {
+            $this->markTestSkipped('Every service now has a photograph; the artwork fallback can be retired.');
+        }
+
+        $this->assertStringContainsString("assets/illustrations/{$service->slug}.svg", $service->imageUrl());
         $this->assertFalse($service->hasUploadedImage());
 
         $this->get(route('services.show', $service))
             ->assertOk()
-            ->assertSee('assets/illustrations/customs-clearance.svg', false);
+            ->assertSee("assets/illustrations/{$service->slug}.svg", false);
     }
 
     public function test_an_unknown_service_slug_still_gets_artwork(): void

@@ -81,6 +81,8 @@ class Service extends Model
     public const BUNDLED_PHOTO_ALTS = [
         'sea-freight' => 'A container being lifted by a ship to shore gantry crane over the quay, with a vessel alongside',
         'air-freight' => 'Netted air cargo pallets on a scissor loader being loaded through the side door of a freighter aircraft at dusk',
+        'customs-clearance' => 'A coordinator at a desk checking a bill of lading against the paperwork for a shipment, with a stamp and a laptop beside it',
+        'warehousing' => 'A warehouse aisle of shrink wrapped pallets on steel racking, with a forklift working at the far end',
     ];
 
     /**

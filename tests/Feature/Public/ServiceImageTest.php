@@ -24,6 +24,22 @@ class ServiceImageTest extends TestCase
         $this->seed(ServiceSeeder::class);
     }
 
+    /**
+     * A service still showing the drawn artwork. Photographs arrive one at a
+     * time, so which service that is keeps changing; naming one here meant a
+     * test failing every time a photograph landed.
+     */
+    private function serviceWithoutPhotograph(): Service
+    {
+        $service = Service::published()->get()->first(fn (Service $s) => $s->bundledPhotoPath() === null);
+
+        if (! $service) {
+            $this->markTestSkipped('Every service now has a photograph; the artwork fallback can be retired.');
+        }
+
+        return $service;
+    }
+
     public function test_a_service_with_a_bundled_photograph_uses_it_instead_of_the_artwork(): void
     {
         $service = Service::where('slug', 'sea-freight')->firstOrFail();
@@ -35,9 +51,9 @@ class ServiceImageTest extends TestCase
 
     public function test_a_service_without_one_keeps_its_artwork(): void
     {
-        $service = Service::where('slug', 'customs-clearance')->firstOrFail();
+        $service = $this->serviceWithoutPhotograph();
 
-        $this->assertStringContainsString('assets/illustrations/customs-clearance.svg', $service->imageUrl());
+        $this->assertStringContainsString("assets/illustrations/{$service->slug}.svg", $service->imageUrl());
     }
 
     public function test_an_uploaded_photograph_wins_over_the_bundled_one(): void
@@ -56,10 +72,8 @@ class ServiceImageTest extends TestCase
         $this->assertStringContainsString('gantry crane', $service->imageAlt());
 
         // Artwork is named by its service, which is all it depicts.
-        $this->assertSame(
-            'Customs Clearance',
-            Service::where('slug', 'customs-clearance')->firstOrFail()->imageAlt(),
-        );
+        $drawn = $this->serviceWithoutPhotograph();
+        $this->assertSame($drawn->title, $drawn->imageAlt());
     }
 
     public function test_alt_text_set_by_staff_is_always_respected(): void
