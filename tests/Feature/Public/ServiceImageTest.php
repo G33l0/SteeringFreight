@@ -70,11 +70,31 @@ class ServiceImageTest extends TestCase
         $this->assertSame('Our own container being loaded at Apapa', $service->fresh()->imageAlt());
     }
 
-    public function test_the_services_page_renders_both_kinds(): void
+    public function test_every_service_renders_the_picture_it_actually_has(): void
     {
-        $this->get(route('services.index'))
-            ->assertOk()
-            ->assertSee('assets/photos/service-sea-freight.webp', false)
-            ->assertSee('assets/illustrations/air-freight.svg', false);
+        $response = $this->get(route('services.index'))->assertOk();
+
+        // Worked out from what is on disk rather than named here, so landing the
+        // next photograph does not mean editing this test.
+        $photographed = 0;
+        $drawn = 0;
+
+        foreach (Service::published()->get() as $service) {
+            if ($photo = $service->bundledPhotoPath()) {
+                $response->assertSee($photo, false);
+                $photographed++;
+
+                continue;
+            }
+
+            $response->assertSee("assets/illustrations/{$service->slug}.svg", false);
+            $drawn++;
+        }
+
+        // Both kinds are in use while the photographs arrive one at a time. When
+        // the last one lands this drops to zero, which is the moment to retire
+        // the artwork rather than a failure.
+        $this->assertGreaterThan(0, $photographed, 'No service is using a bundled photograph.');
+        $this->assertSame(Service::published()->count(), $photographed + $drawn);
     }
 }
