@@ -18,7 +18,7 @@ class AuditLogger
 {
     public const REDACTED_KEYS = [
         'password', 'password_confirmation', 'current_password', 'remember_token',
-        'two_factor_secret', 'two_factor_recovery_codes', 'public_token', 'token',
+        'login_code', 'login_code_hash', 'public_token', 'token',
         'api_key', 'secret',
     ];
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\Auth\NewPasswordController;
 use App\Http\Controllers\Admin\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\SessionController;
+use App\Http\Controllers\Admin\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\ConversationController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\ShipmentController;
 use App\Http\Controllers\Admin\ShipmentDocumentController;
 use App\Http\Controllers\Admin\ShipmentEventController;
 use App\Http\Controllers\Admin\ShipmentStatusController;
+use App\Http\Controllers\Admin\SuspendedController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaqController;
@@ -107,6 +109,16 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             ->middleware('throttle:admin-login')
             ->name('login.store');
 
+        // Second step of a master admin sign in. Nobody is authenticated yet,
+        // which is why these sit with the guest routes.
+        Route::get('login/code', [TwoFactorChallengeController::class, 'create'])->name('login.challenge');
+        Route::post('login/code', [TwoFactorChallengeController::class, 'store'])
+            ->middleware('throttle:admin-code')
+            ->name('login.challenge.store');
+        Route::post('login/code/resend', [TwoFactorChallengeController::class, 'resend'])
+            ->middleware('throttle:admin-code')
+            ->name('login.challenge.resend');
+
         Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
         Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
             ->middleware('throttle:forms')
@@ -120,6 +132,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
     Route::middleware(['auth', 'staff'])->group(function (): void {
         Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
+
+        // The only screen a paused or expired account can reach.
+        Route::get('suspended', [SuspendedController::class, 'show'])->name('suspended');
 
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -178,6 +193,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::put('settings/{group}', [SettingController::class, 'update'])->name('settings.update');
 
         Route::resource('users', UserController::class)->except(['show']);
+        Route::post('users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/resume', [UserController::class, 'resume'])->name('users.resume');
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 

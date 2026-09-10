@@ -5,6 +5,7 @@ namespace Tests;
 use App\Enums\UserRole;
 use App\Models\ShipmentStatus;
 use App\Models\User;
+use App\Support\Settings;
 use Database\Seeders\SettingsSeeder;
 use Database\Seeders\ShipmentStatusSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -30,6 +31,23 @@ abstract class TestCase extends BaseTestCase
     protected function representative(array $attributes = []): User
     {
         return User::factory()->create(['role' => UserRole::Representative] + $attributes);
+    }
+
+    /**
+     * Change a site setting for the duration of one test.
+     */
+    protected function setSetting(string $key, mixed $value): void
+    {
+        app(Settings::class)->set($key, $value);
+    }
+
+    /**
+     * Sign in without the emailed code. Most tests are about what happens
+     * after the sign in, not the sign in itself.
+     */
+    protected function withoutTwoFactor(): void
+    {
+        $this->setSetting('security.two_factor', false);
     }
 
     protected function trackingStatus(string $slug): ShipmentStatus

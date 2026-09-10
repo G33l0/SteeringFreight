@@ -104,6 +104,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Staff access and sign in
+    |--------------------------------------------------------------------------
+    |
+    | A master admin signs in with a password and then a one time code sent to
+    | their email address. Whether the code is asked for at all is a site
+    | setting (`security.two_factor`) so it can be turned off from the panel;
+    | `php artisan portlane:two-factor off` does the same from the console if
+    | email breaks and nobody can get in.
+    |
+    | The code is six digits, stored only as a hash, valid for `code_ttl`
+    | minutes and thrown away after `code_attempts` wrong guesses. `code_resend`
+    | is how long the account must wait before another code is sent, which
+    | stops the login form being used to post mail at somebody.
+    |
+    */
+
+    'security' => [
+        'code_ttl' => max(1, (int) env('LOGIN_CODE_TTL', 10)),
+        'code_attempts' => max(1, (int) env('LOGIN_CODE_ATTEMPTS', 5)),
+        'code_resend' => max(15, (int) env('LOGIN_CODE_RESEND', 60)),
+        // How long the half finished sign in survives before the password has
+        // to be entered again.
+        'challenge_ttl' => max(1, (int) env('LOGIN_CHALLENGE_TTL', 15)),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Pagination
     |--------------------------------------------------------------------------
     */

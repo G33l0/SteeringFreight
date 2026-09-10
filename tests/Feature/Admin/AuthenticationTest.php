@@ -17,8 +17,15 @@ class AuthenticationTest extends TestCase
         $this->get(route('admin.login'))->assertOk()->assertSee('Sign in');
     }
 
+    /**
+     * The emailed code has a file of its own; this is the password step with
+     * the code switched off, which is how a site that has not set up email yet
+     * signs in.
+     */
     public function test_administrator_can_sign_in(): void
     {
+        $this->withoutTwoFactor();
+
         $user = $this->administrator(['password' => Hash::make('correct-horse-battery')]);
 
         $response = $this->post(route('admin.login.store'), [
@@ -30,6 +37,18 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->fresh()->last_login_at);
         $this->assertDatabaseHas('audit_logs', ['action' => 'auth.login', 'user_id' => $user->id]);
+    }
+
+    public function test_a_master_admin_is_asked_for_a_code_before_the_panel_opens(): void
+    {
+        $user = $this->administrator(['password' => Hash::make('correct-horse-battery')]);
+
+        $this->post(route('admin.login.store'), [
+            'email' => $user->email,
+            'password' => 'correct-horse-battery',
+        ])->assertRedirect(route('admin.login.challenge'));
+
+        $this->assertGuest();
     }
 
     public function test_sign_in_fails_with_the_wrong_password(): void

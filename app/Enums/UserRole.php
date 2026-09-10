@@ -69,6 +69,16 @@ enum UserRole: string
         return $this === self::Representative;
     }
 
+    /**
+     * Whether signing in to this role needs a one time code as well as a
+     * password. A master admin can read every customer record on the system,
+     * which is what makes the extra step worth asking for.
+     */
+    public function requiresTwoFactor(): bool
+    {
+        return $this === self::Administrator;
+    }
+
     /** @return array<string, string> */
     public static function options(): array
     {

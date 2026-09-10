@@ -49,6 +49,7 @@ invented by the application: statuses, locations and descriptions are entered by
 24. [Testing the public tracking page](#24-testing-the-public-tracking-page)
 25. [Testing customer chat](#25-testing-customer-chat)
 26. [Testing administrator login](#26-testing-administrator-login)
+26a. [Staff access periods](#26a-staff-access-periods)
 27. [Production build](#27-production-build)
 28. [Production deployment](#28-production-deployment)
 29. [Shared hosting deployment](#29-shared-hosting-deployment)
@@ -158,6 +159,12 @@ the FAQ entries, the reviews and all the company details are editable in the adm
   representatives** who only answer customer messages. Each representative works from a
   private dashboard showing the conversations assigned to them, with the tracking details
   of the shipment each conversation is about
+- The master admin reads and answers every conversation on every tracking number,
+  including the threads a representative is handling, and can hand a conversation to
+  somebody else at any point
+- Staff accounts can be paused and resumed, deleted, or given an access period that ends
+  on a date you set. A suspended account keeps its history, can still sign in to read a
+  renewal notice you write yourself, and can do nothing else at all
 
 **Getting it live**
 
@@ -174,8 +181,14 @@ the FAQ entries, the reviews and all the company details are editable in the adm
 **Security**
 
 - Session authentication with password hashing, CSRF protection and login rate limiting
+- A six digit sign-in code, emailed to the account, required for master admin sign in.
+  Stored only as a hash, valid once, expiring, attempt limited, and switchable from the
+  panel or the console
+- Staff passwords of at least twelve characters, checked against known breaches in
+  production
 - Role based authorisation through gates and policies, ready for finer permissions
-- Columns in place for two factor authentication
+- Access periods and suspension: one flag takes every permission away at once, so a paused
+  account cannot reach a shipment, a tracking number or a customer conversation
 - Private file storage outside the web root with authorised downloads only
 - Validation through form requests, and administrator written copy rendered without raw HTML
 
@@ -656,11 +669,63 @@ the shipment's current status and progress are recalculated from the remaining h
 ## 26. Testing administrator login
 
 - Sign in at `/admin/login` with the account from section 16.
+- A master admin is then asked for a six digit code, emailed to the account.
+  While `MAIL_MAILER=log` it appears in `storage/logs/laravel.log` instead of an
+  inbox. Enter it to finish signing in.
 - Enter a wrong password five times and confirm you are rate limited.
 - Use **Forgot password** and check that the reset email arrives (or appears in
   `storage/logs` when `MAIL_MAILER=log`).
 - Sign out, then confirm `/admin/shipments` redirects you back to the login page.
 - Check **Audit logs**: sign in, sign out and every change are recorded.
+
+### The sign-in code
+
+A password on its own is what an account like this is normally lost to, so a
+master admin needs a second thing: a six digit code sent to the account's email
+address. Email is the only channel — the address is already the account's own
+and is already how a password is reset, so it costs nothing per sign in and
+needs no telephone number on file.
+
+- Only the master admin role is asked. A customer representative signs in with
+  a password alone: they can read the conversations assigned to them and
+  nothing else.
+- The code is valid for ten minutes, works once, and is thrown away after five
+  wrong guesses — at which point the password has to be entered again.
+- Only a hash of the code is stored. It is never written to the audit log.
+- Turn it on and off under **Site settings → Security and access**.
+
+**If email breaks and nobody can sign in**, turn the code off from the server's
+own shell and fix the mail settings from inside the panel:
+
+```sh
+php artisan portlane:two-factor off     # off, so a password alone signs in
+php artisan portlane:two-factor on      # back on once email works again
+php artisan portlane:two-factor         # what it is set to right now
+```
+
+Turn it back on as soon as email is working. With it off, a password is all
+that stands between a phishing message and every customer record on the system.
+
+## 26a. Staff access periods
+
+A representative can be given the panel for a fixed period, and paused by hand
+at any time, from **Staff accounts**:
+
+- **Access ends on** — set when the account is created or edited. Once the date
+  passes the account is suspended automatically; no cron job is involved, so a
+  host that never runs the scheduler still honours it.
+- **Pause** and **Resume** — the same thing by hand, without deleting the
+  account or losing its audit trail. Resuming an account whose period ran out
+  gives it a fresh one, the length of the default in the settings.
+- **Delete** — removes the account outright.
+- **Default access period** and the **notice shown to a suspended member of
+  staff** are both under **Site settings → Security and access**, so the
+  renewal wording is yours to write rather than something baked into a template.
+
+A suspended account can still sign in, and lands on that notice and nowhere
+else. Suspension takes away every permission at once, so a paused representative
+cannot open a conversation, create or edit a shipment, or change a tracking
+number, and is not offered when a conversation is being assigned.
 
 ## 27. Production build
 
@@ -1033,8 +1098,12 @@ Before going live:
 - [ ] `APP_KEY` generated, and `.env` never committed
 - [ ] The domain serves `public/`, not the project root
 - [ ] HTTPS working, with `SESSION_SECURE_COOKIE=true`
-- [ ] A strong, unique administrator password; one account per member of staff
+- [ ] A strong, unique administrator password; one account per member of staff. The
+      application enforces at least twelve characters, and in production also refuses
+      passwords known to have appeared in a breach
+- [ ] The sign-in code left on: `php artisan portlane:two-factor` should say ON
 - [ ] Roles assigned by what people actually need
+- [ ] An access period set on any representative who should only have the panel for a while
 - [ ] Demo data removed: `php artisan portlane:clear-demo-data`
 - [ ] `storage` and `bootstrap/cache` writable, and nothing else writable
 - [ ] Database user limited to its own database
@@ -1044,8 +1113,9 @@ Before going live:
 
 Already handled by the application: CSRF protection on every form, hashed passwords,
 parameter-bound queries, escaped output, mass assignment protection, authorisation checks
-on every admin route, rate limiting on login, tracking, forms and chat, validated file
-uploads stored outside the web root, and an audit log that never records credentials.
+on every admin route, rate limiting on login, the sign-in code, tracking, forms and chat,
+validated file uploads stored outside the web root, and an audit log that never records
+credentials or sign-in codes.
 
 ## 39. Environment variable reference
 
@@ -1083,6 +1153,10 @@ uploads stored outside the web root, and an audit log that never records credent
 | `CHAT_POLL_INTERVAL` | Milliseconds between chat polls | `8000` |
 | `CHAT_RETENTION_HOURS` | Hours a conversation lives after its last message | `24` |
 | `UPLOAD_MAX_KB` | Largest shipment document, in kilobytes | `8192` |
+| `LOGIN_CODE_TTL` | Minutes a sign-in code stays valid | `10` |
+| `LOGIN_CODE_ATTEMPTS` | Wrong guesses before a code is thrown away | `5` |
+| `LOGIN_CODE_RESEND` | Seconds before another code may be sent | `60` |
+| `LOGIN_CHALLENGE_TTL` | Minutes a half finished sign in survives | `15` |
 
 ## 40. Project directory structure
 

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        $this->registerPasswordPolicy();
         $this->registerGates();
         $this->registerRateLimiters();
 
@@ -76,6 +78,29 @@ class AppServiceProvider extends ServiceProvider
      * permission map on the user, so adding a permissions table later only
      * means changing User::hasPermission().
      */
+    /**
+     * How strong a staff password has to be.
+     *
+     * Laravel's own default is eight characters and nothing else, which accepts
+     * "password" for an account that can read every customer record. Length is
+     * what actually resists guessing, so this asks for twelve rather than
+     * demanding a symbol nobody remembers, and in production also refuses
+     * passwords known to have been breached. That check fails open if the
+     * service cannot be reached, so a host without outbound access is not
+     * locked out of setting a password.
+     *
+     * The cap is bcrypt's: it ignores anything past 72 bytes, and silently
+     * accepting a longer password would be a promise the hash does not keep.
+     */
+    private function registerPasswordPolicy(): void
+    {
+        Password::defaults(function (): Password {
+            $rule = Password::min(12)->max(72);
+
+            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
+        });
+    }
+
     private function registerGates(): void
     {
         Gate::policy(ChatConversation::class, ChatConversationPolicy::class);
@@ -123,5 +148,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()),
             Limit::perMinute(20)->by($request->ip()),
         ]);
+
+        // Guessing a six digit code is only worth trying at speed. The code
+        // itself allows five wrong guesses before it is thrown away; this stops
+        // the resend button being used to work around that.
+        RateLimiter::for('admin-code', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
     }
 }

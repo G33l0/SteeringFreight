@@ -348,6 +348,29 @@ class SettingDefinitions
             ],
 
             // ---------------------------------------------------------------
+            // Security and staff access
+            // ---------------------------------------------------------------
+            'security.two_factor' => [
+                'group' => 'security', 'type' => self::TYPE_BOOLEAN,
+                'label' => 'Ask master admins for a sign-in code',
+                'help' => 'After the password is accepted, a six digit code is emailed to the account and has to be entered before the panel opens. Leave this on unless email is not working: a password on its own is all that stands between a phishing message and every customer record. If you are locked out, run "php artisan portlane:two-factor off" on the server.',
+                'default' => true,
+            ],
+            'security.access_days' => [
+                'group' => 'security', 'type' => self::TYPE_INTEGER,
+                'label' => 'Default access period for a new representative, in days',
+                'help' => 'Fills in the access period on the new account form, and is the period a paused account is given back when you resume it. Zero means accounts do not expire unless you set a date yourself.',
+                'default' => 0,
+            ],
+            'security.renewal_note' => [
+                'group' => 'security', 'type' => self::TYPE_TEXT,
+                'label' => 'Notice shown to a suspended member of staff',
+                'help' => 'What a paused or expired account sees instead of the panel. Say who to contact and how.',
+                'default' => 'Your access to the panel has been paused. Contact the administrator to renew your subscription and have it restored.',
+                'rows' => 3,
+            ],
+
+            // ---------------------------------------------------------------
             // Brand
             // ---------------------------------------------------------------
             'brand.primary_colour' => [
@@ -404,6 +427,7 @@ class SettingDefinitions
             'quotes' => 'Quote requests',
             'notifications' => 'Notifications',
             'legal' => 'Legal',
+            'security' => 'Security and access',
             'brand' => 'Brand',
             'seo' => 'Search and social',
         ];
