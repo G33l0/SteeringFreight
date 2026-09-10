@@ -1338,7 +1338,7 @@ The application ships with a real logo, not a placeholder. The source files are 
 | `portlane-logo-horizontal-on-dark.svg` / `.png` | Dark backgrounds |
 | `portlane-mark.svg`, `portlane-mark-512.png` | Compact mark, app icons, avatars |
 | `portlane-mark-on-dark.svg` | Compact mark on dark backgrounds |
-| `portlane-og.svg` / `.png` | 1200 x 630 social sharing card |
+| `portlane-og.jpg` | 1200 x 630 social sharing card: the container photograph with the logo and tagline over it. Replace it by uploading your own under **Site settings → Search and social**; the photograph behind it is `assets/photos/social-card.webp`. |
 | `public/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` | Browser and device icons |
 
 To use your own logo: **Site settings → Company → Logo**, upload an SVG or PNG with a
@@ -1357,7 +1357,7 @@ is meant to be replaced with photographs of your own operation.
   services list and the service page. Landscape, at least 1200 pixels wide.
 - **The homepage hero:** Site settings → Homepage → Hero photograph. Wide, at least 1800
   pixels; a photograph of a container terminal ships with the application and is used
-  until you upload one. Keep the left third of any replacement free of detail — the
+  until you upload one. The About page banner works the same way, under **Company**. Keep the left third of any replacement free of detail — the
   headline sits over it — and remember the image renders darkened behind a gradient, so
   strong simple shapes survive and busy ones turn to mud.
 - **The about page:** the illustration is referenced in `resources/views/public/about.blade.php`.

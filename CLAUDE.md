@@ -16,9 +16,12 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   `ContentTokens` ([[placeholders]] in page copy, resolved from settings, with unset
   lines dropped), `LaunchChecklist` (what a fresh install still needs).
 - `public/assets/brand` — the logo suite, favicons and social card.
-  `public/assets/photos` — photography that ships with the application; the homepage hero
-  is one of these, and `home.hero_image` replaces it when a business uploads its own.
-  `public/assets/illustrations` — service artwork used until real photography is uploaded.
+  `public/assets/photos` — photography that ships with the application: the homepage hero,
+  the About page banner, one per service, and the picture behind the social card. Each has a
+  setting that replaces it (`home.hero_image`, `company.about_image`, a service's own image
+  upload). `Service::bundledPhotoPath()` finds a service's photograph by slug.
+  `public/assets/illustrations` — one generic drawing, shown by a service added after the
+  application shipped until a picture is uploaded for it.
 - `app/Http/Controllers` — public controllers at the root, tracking under `Tracking/`,
   admin under `Admin/`.
 - `resources/views/public` and `resources/views/admin`, with shared Blade components in

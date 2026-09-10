@@ -75,6 +75,11 @@ class SettingDefinitions
                 'help' => 'Optional. Replaces the built in Portlane logo in the header, footer and admin panel. SVG or PNG with a transparent background.',
                 'default' => null,
             ],
+            'company.about_image' => [
+                'group' => 'company', 'type' => self::TYPE_IMAGE, 'label' => 'About page banner',
+                'help' => 'Optional. A wide photograph across the top of the About page, about two and a half times as wide as it is tall. Leave empty to use the photograph bundled with the application.',
+                'default' => null,
+            ],
 
             // ---------------------------------------------------------------
             // Contact and hours

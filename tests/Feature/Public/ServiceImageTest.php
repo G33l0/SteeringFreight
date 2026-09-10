@@ -25,19 +25,16 @@ class ServiceImageTest extends TestCase
     }
 
     /**
-     * A service still showing the drawn artwork. Photographs arrive one at a
-     * time, so which service that is keeps changing; naming one here meant a
-     * test failing every time a photograph landed.
+     * A service added after the application shipped, which therefore has no
+     * photograph bundled for it.
      */
     private function serviceWithoutPhotograph(): Service
     {
-        $service = Service::published()->get()->first(fn (Service $s) => $s->bundledPhotoPath() === null);
-
-        if (! $service) {
-            $this->markTestSkipped('Every service now has a photograph; the artwork fallback can be retired.');
-        }
-
-        return $service;
+        return Service::factory()->create([
+            'title' => 'Project Cargo',
+            'slug' => 'project-cargo',
+            'is_published' => true,
+        ]);
     }
 
     public function test_a_service_with_a_bundled_photograph_uses_it_instead_of_the_artwork(): void
@@ -49,11 +46,12 @@ class ServiceImageTest extends TestCase
         $this->assertStringNotContainsString('illustrations', $service->imageUrl());
     }
 
-    public function test_a_service_without_one_keeps_its_artwork(): void
+    public function test_a_service_added_later_gets_the_generic_artwork(): void
     {
         $service = $this->serviceWithoutPhotograph();
 
-        $this->assertStringContainsString("assets/illustrations/{$service->slug}.svg", $service->imageUrl());
+        $this->assertNull($service->bundledPhotoPath());
+        $this->assertStringContainsString('assets/illustrations/cargo-handling.svg', $service->imageUrl());
     }
 
     public function test_an_uploaded_photograph_wins_over_the_bundled_one(): void
@@ -71,7 +69,7 @@ class ServiceImageTest extends TestCase
         // Alt text for a photograph should say what is in it.
         $this->assertStringContainsString('gantry crane', $service->imageAlt());
 
-        // Artwork is named by its service, which is all it depicts.
+        // Generic artwork is named by its service, which is all it can be.
         $drawn = $this->serviceWithoutPhotograph();
         $this->assertSame($drawn->title, $drawn->imageAlt());
     }
@@ -84,31 +82,15 @@ class ServiceImageTest extends TestCase
         $this->assertSame('Our own container being loaded at Apapa', $service->fresh()->imageAlt());
     }
 
-    public function test_every_service_renders_the_picture_it_actually_has(): void
+    public function test_every_service_the_application_ships_with_has_a_photograph(): void
     {
         $response = $this->get(route('services.index'))->assertOk();
 
-        // Worked out from what is on disk rather than named here, so landing the
-        // next photograph does not mean editing this test.
-        $photographed = 0;
-        $drawn = 0;
-
         foreach (Service::published()->get() as $service) {
-            if ($photo = $service->bundledPhotoPath()) {
-                $response->assertSee($photo, false);
-                $photographed++;
+            $photo = $service->bundledPhotoPath();
 
-                continue;
-            }
-
-            $response->assertSee("assets/illustrations/{$service->slug}.svg", false);
-            $drawn++;
+            $this->assertNotNull($photo, "{$service->title} has no bundled photograph.");
+            $response->assertSee($photo, false);
         }
-
-        // Both kinds are in use while the photographs arrive one at a time. When
-        // the last one lands this drops to zero, which is the moment to retire
-        // the artwork rather than a failure.
-        $this->assertGreaterThan(0, $photographed, 'No service is using a bundled photograph.');
-        $this->assertSame(Service::published()->count(), $photographed + $drawn);
     }
 }
