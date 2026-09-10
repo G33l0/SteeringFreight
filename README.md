@@ -1033,7 +1033,9 @@ Before going live:
 - [ ] `APP_KEY` generated, and `.env` never committed
 - [ ] The domain serves `public/`, not the project root
 - [ ] HTTPS working, with `SESSION_SECURE_COOKIE=true`
-- [ ] A strong, unique administrator password; one account per member of staff
+- [ ] A strong, unique administrator password; one account per member of staff. The
+      application enforces at least twelve characters, and in production also refuses
+      passwords known to have appeared in a breach
 - [ ] Roles assigned by what people actually need
 - [ ] Demo data removed: `php artisan portlane:clear-demo-data`
 - [ ] `storage` and `bootstrap/cache` writable, and nothing else writable

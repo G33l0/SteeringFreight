@@ -44,7 +44,13 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   keeps a thread alive; `scopeWithinRetention()` is the matching query scope. Message bodies
   are never copied into notification emails or the audit log, and the audit descriptions
   reference the tracking number rather than the customer's name.
-- Every administrative write is recorded through `AuditLogger`. Never log credentials.
+- Every administrative write is recorded through `AuditLogger`. Never log credentials:
+  `changes()` records which fields changed, never their values, and `redact()` masks
+  sensitive keys.
+- Staff passwords go through `Password::defaults()`, set in `AppServiceProvider` to at least
+  twelve characters, capped at bcrypt's 72 byte limit, and checked against known breaches in
+  production. Laravel's own default is eight characters and would accept "password" for an
+  account that can read every customer record.
 - Customer facing text comes from the database: site settings, services, pages, FAQs and
   shipment records. Do not hard code company details in templates.
 - Countries come from `App\Support\Countries` and are validated against it everywhere they
