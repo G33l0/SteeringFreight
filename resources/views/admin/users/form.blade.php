@@ -32,8 +32,18 @@
             @endif
         </x-form.field>
 
+        <x-form.field name="access_expires_at" label="Access ends on" class="sm:col-span-2"
+                      help="How long this account may use the panel. It is suspended automatically once the date passes, and sees a notice asking them to contact you. Leave empty for an account that does not expire.">
+            <input type="date" id="access_expires_at" name="access_expires_at"
+                   value="{{ old('access_expires_at', $staff->access_expires_at?->toDateString()) }}"
+                   class="input" @disabled(auth()->user()->is($staff))>
+            @if (auth()->user()->is($staff))
+                <p class="help">You cannot put an end date on your own account.</p>
+            @endif
+        </x-form.field>
+
         <x-form.field name="password" :label="$staff->exists ? 'New password' : 'Password'" :required="! $staff->exists"
-                      help="At least 8 characters. Leave empty to keep the current password.">
+                      help="At least 12 characters. Leave empty to keep the current password.">
             <input type="password" id="password" name="password" autocomplete="new-password" class="input" @required(! $staff->exists)>
         </x-form.field>
 
@@ -47,4 +57,14 @@
                @checked(old('is_active', $staff->is_active ?? true)) @disabled(auth()->user()->is($staff))>
         Account is active
     </label>
+
+    @if ($staff->exists && $staff->isSuspended())
+        <p class="mt-4 rounded border border-caution-700/20 bg-caution-100 p-3 text-sm text-caution-700">
+            This account is currently
+            {{ $staff->suspensionReason() === 'expired'
+                ? 'suspended because its access period ended on '.$staff->access_expires_at?->format('j M Y').'.'
+                : 'paused.' }}
+            Use the Resume button on the staff list to let them back in.
+        </p>
+    @endif
 </x-admin.panel>

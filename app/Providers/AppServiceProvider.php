@@ -148,5 +148,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()),
             Limit::perMinute(20)->by($request->ip()),
         ]);
+
+        // Guessing a six digit code is only worth trying at speed. The code
+        // itself allows five wrong guesses before it is thrown away; this stops
+        // the resend button being used to work around that.
+        RateLimiter::for('admin-code', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
     }
 }

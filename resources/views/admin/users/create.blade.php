@@ -1,4 +1,4 @@
-<x-layouts.admin title="New admin account">
+<x-layouts.admin title="New staff account">
     <form method="POST" action="{{ route('admin.users.store') }}" class="max-w-3xl">
         @csrf
         @include('admin.users.form')

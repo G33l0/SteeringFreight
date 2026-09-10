@@ -29,7 +29,7 @@ class CreateAdminUser extends Command
     {
         $name = $this->option('name') ?: text('Full name', required: true);
         $email = $this->option('email') ?: text('Email address', required: true);
-        $password = $this->option('password') ?: promptPassword('Password (at least 8 characters)', required: true);
+        $password = $this->option('password') ?: promptPassword('Password (at least 12 characters)', required: true);
         $role = $this->option('role');
 
         $validator = Validator::make(
@@ -37,7 +37,7 @@ class CreateAdminUser extends Command
             [
                 'name' => ['required', 'string', 'max:160'],
                 'email' => ['required', 'email:filter', 'max:180', 'unique:users,email'],
-                'password' => ['required', Password::min(8)],
+                'password' => ['required', Password::defaults()],
                 'role' => ['required', 'in:'.implode(',', array_column(UserRole::cases(), 'value'))],
             ],
         );

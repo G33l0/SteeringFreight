@@ -105,10 +105,7 @@ class ConversationController extends Controller
         $this->authorize('assign', $conversation);
 
         $validated = $request->validate([
-            'assigned_to' => [
-                'nullable', 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('is_active', true)),
-            ],
+            'assigned_to' => $this->assigneeRules(),
         ]);
 
         $assignee = $validated['assigned_to'] ? User::find($validated['assigned_to']) : null;
@@ -166,7 +163,7 @@ class ConversationController extends Controller
             'contact_email' => ['required', 'email:filter', 'max:180'],
             'subject' => ['nullable', 'string', 'max:180'],
             'body' => ['required', 'string', 'min:1', 'max:'.config('portlane.chat.message_max_length')],
-            'assigned_to' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'assigned_to' => $this->assigneeRules(),
         ]);
 
         $conversation = $shipment->conversations()->create([
@@ -185,6 +182,26 @@ class ConversationController extends Controller
     }
 
     /**
+     * A conversation cannot be handed to somebody who could not open it.
+     * Disabled, paused and expired accounts are neither offered in the list nor
+     * accepted if their id is posted by hand.
+     *
+     * @return list<mixed>
+     */
+    private function assigneeRules(): array
+    {
+        return [
+            'nullable', 'integer',
+            Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where('is_active', true)
+                ->whereNull('suspended_at')
+                ->where(fn ($query) => $query
+                    ->whereNull('access_expires_at')
+                    ->orWhere('access_expires_at', '>', now()))),
+        ];
+    }
+
+    /**
      * Staff a conversation can be handed to. Only a master admin sees the list.
      *
      * @return Collection<int, User>
@@ -196,7 +213,7 @@ class ConversationController extends Controller
         }
 
         return User::query()
-            ->where('is_active', true)
+            ->usable()
             ->whereIn('role', [UserRole::Representative->value, UserRole::Administrator->value])
             ->orderBy('name')
             ->get(['id', 'name', 'role']);

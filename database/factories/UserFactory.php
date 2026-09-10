@@ -46,4 +46,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn () => ['is_active' => false]);
     }
+
+    /** Paused by an administrator. */
+    public function suspended(): static
+    {
+        return $this->state(fn () => ['suspended_at' => now()->subDay()]);
+    }
+
+    /** Access period ran out yesterday. */
+    public function expired(): static
+    {
+        return $this->state(fn () => ['access_expires_at' => now()->subDay()]);
+    }
 }

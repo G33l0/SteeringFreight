@@ -23,13 +23,13 @@ class User extends Authenticatable
         'job_title',
         'phone',
         'is_active',
+        'access_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
+        'login_code_hash',
     ];
 
     /**
@@ -43,7 +43,11 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
-            'two_factor_confirmed_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'access_expires_at' => 'datetime',
+            'login_code_expires_at' => 'datetime',
+            'login_code_sent_at' => 'datetime',
+            'login_code_attempts' => 'integer',
         ];
     }
 
@@ -59,9 +63,15 @@ class User extends Authenticatable
         return $this->hasMany(ChatConversation::class, 'assigned_to');
     }
 
+    /**
+     * Every gate and policy in the panel resolves through here, which is why
+     * suspension is answered in this one method: a paused or expired account
+     * fails every ability at once, so there is no screen left where it could
+     * still change a shipment or a tracking number.
+     */
     public function hasPermission(string $ability): bool
     {
-        if (! $this->is_active) {
+        if (! $this->is_active || $this->isSuspended()) {
             return false;
         }
 
@@ -72,7 +82,7 @@ class User extends Authenticatable
 
     public function isAdministrator(): bool
     {
-        return $this->role === UserRole::Administrator && $this->is_active;
+        return $this->role === UserRole::Administrator && $this->is_active && ! $this->isSuspended();
     }
 
     /**
@@ -85,12 +95,38 @@ class User extends Authenticatable
     }
 
     /**
-     * True when two factor authentication has been completed for the account.
-     * The columns exist so the feature can be enabled without a migration.
+     * Paused by an administrator, or past the date their access was granted
+     * until. Either way the account can still sign in — it lands on the notice
+     * telling them to speak to the administrator — but it can do nothing else.
      */
-    public function hasTwoFactorEnabled(): bool
+    public function isSuspended(): bool
     {
-        return $this->two_factor_confirmed_at !== null;
+        return $this->suspended_at !== null || $this->accessHasExpired();
+    }
+
+    public function accessHasExpired(): bool
+    {
+        return $this->access_expires_at !== null && $this->access_expires_at->isPast();
+    }
+
+    /**
+     * Why the account is suspended, for the notice screen and the staff list.
+     */
+    public function suspensionReason(): ?string
+    {
+        return match (true) {
+            $this->suspended_at !== null => 'paused',
+            $this->accessHasExpired() => 'expired',
+            default => null,
+        };
+    }
+
+    /**
+     * Signed in, enabled and not suspended: the account can actually work.
+     */
+    public function isUsable(): bool
+    {
+        return $this->is_active && ! $this->isSuspended();
     }
 
     public function initials(): string
@@ -106,5 +142,21 @@ class User extends Authenticatable
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /**
+     * Accounts that can be given work: enabled, not paused, not expired. Used
+     * wherever staff are offered for selection, so a suspended representative
+     * is never handed a conversation they cannot open.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeUsable(Builder $query): void
+    {
+        $query->where('is_active', true)
+            ->whereNull('suspended_at')
+            ->where(fn (Builder $query) => $query
+                ->whereNull('access_expires_at')
+                ->orWhere('access_expires_at', '>', now()));
     }
 }

@@ -88,7 +88,7 @@
                         <x-admin.nav-link :href="route('admin.settings.edit')" icon="settings" :active="request()->routeIs('admin.settings.*')">Site settings</x-admin.nav-link>
                     @endcan
                     @can('users.manage')
-                        <x-admin.nav-link :href="route('admin.users.index')" icon="user" :active="request()->routeIs('admin.users.*')">Admin users</x-admin.nav-link>
+                        <x-admin.nav-link :href="route('admin.users.index')" icon="user" :active="request()->routeIs('admin.users.*')">Staff accounts</x-admin.nav-link>
                     @endcan
                     @can('audit.view')
                         <x-admin.nav-link :href="route('admin.audit-logs.index')" icon="log" :active="request()->routeIs('admin.audit-logs.*')">Audit logs</x-admin.nav-link>

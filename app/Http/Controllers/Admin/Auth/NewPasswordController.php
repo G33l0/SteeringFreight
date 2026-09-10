@@ -40,6 +40,12 @@ class NewPasswordController extends Controller
                 $user->forceFill([
                     'password' => $password,
                     'remember_token' => Str::random(60),
+                    // Any sign-in code that was in flight belonged to the old
+                    // password, and is worth nothing now.
+                    'login_code_hash' => null,
+                    'login_code_expires_at' => null,
+                    'login_code_sent_at' => null,
+                    'login_code_attempts' => 0,
                 ])->save();
 
                 $this->audit->record('auth.password_reset', $user, "{$user->name} reset their password", [], $user);

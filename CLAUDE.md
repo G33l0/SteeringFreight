@@ -33,6 +33,19 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   `Representative` (customer representative, chat only). Authorisation goes through gates
   named `area.action` (`shipments.manage`, `settings.manage`, …) resolved from
   `UserRole::permissions()`; model level rules live in `app/Policies`.
+- Suspension is answered in one place: `User::hasPermission()` returns false when the
+  account is paused (`suspended_at`) or its access period has run out
+  (`access_expires_at` in the past), so a suspended account fails every gate at once and
+  there is no screen left where it could still change a shipment or a tracking number.
+  `EnsureUserIsStaff` is the second lock, sending it to `admin.suspended` and nowhere
+  else; `User::scopeUsable()` is the matching query scope, used wherever staff are
+  offered for selection. A suspended account can still sign in — it has to, to read the
+  renewal notice — but a *deactivated* one (`is_active` false) is signed out instead.
+- A master admin signs in with a password and then a six digit code emailed to the
+  account. `TwoFactor::requiredFor()` decides (role plus the `security.two_factor`
+  setting), `LoginCodeService` issues and verifies, `LoginCodeIssued` delivers. Email is
+  the only channel. Only a hash of the code is stored; the code is never audited or
+  logged, and `portlane:two-factor off` is the way back in when mail breaks.
 - A representative may open a conversation only when it is assigned to them or unassigned;
   `ChatConversationPolicy` is the single place that decides this, and
   `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an
@@ -82,6 +95,7 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 composer install && npm install
 php artisan migrate --seed
 php artisan portlane:create-admin
+php artisan portlane:two-factor off   # escape hatch if the sign-in code cannot be sent
 php artisan test
 npm run build
 ```
