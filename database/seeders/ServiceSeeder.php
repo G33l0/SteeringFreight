@@ -160,7 +160,6 @@ TEXT,
             Service::updateOrCreate(
                 ['slug' => $service['slug']],
                 $service + [
-                    'image_alt' => $service['title'].' illustration',
                     'sort_order' => $index + 1,
                     'is_published' => true,
                     'show_on_home' => true,

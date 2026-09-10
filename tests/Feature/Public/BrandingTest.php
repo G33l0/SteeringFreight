@@ -44,14 +44,17 @@ class BrandingTest extends TestCase
     {
         $this->seed(ServiceSeeder::class);
 
-        $service = Service::where('slug', 'sea-freight')->firstOrFail();
+        // A service that has no bundled photograph yet: photographs arrive one at
+        // a time, and until one does the drawn artwork stands in.
+        $service = Service::where('slug', 'customs-clearance')->firstOrFail();
 
-        $this->assertStringContainsString('assets/illustrations/sea-freight.svg', $service->imageUrl());
+        $this->assertNull($service->bundledPhotoPath());
+        $this->assertStringContainsString('assets/illustrations/customs-clearance.svg', $service->imageUrl());
         $this->assertFalse($service->hasUploadedImage());
 
         $this->get(route('services.show', $service))
             ->assertOk()
-            ->assertSee('assets/illustrations/sea-freight.svg', false);
+            ->assertSee('assets/illustrations/customs-clearance.svg', false);
     }
 
     public function test_an_unknown_service_slug_still_gets_artwork(): void
