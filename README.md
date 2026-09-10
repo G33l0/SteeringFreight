@@ -1356,7 +1356,10 @@ is meant to be replaced with photographs of your own operation.
 - **A service:** Services → edit → Image. The uploaded photograph replaces the artwork on the
   services list and the service page. Landscape, at least 1200 pixels wide.
 - **The homepage hero:** Site settings → Homepage → Hero photograph. Wide, at least 1800
-  pixels; the built in harbour artwork is used until you upload one.
+  pixels; a photograph of a container terminal ships with the application and is used
+  until you upload one. Keep the left third of any replacement free of detail — the
+  headline sits over it — and remember the image renders darkened behind a gradient, so
+  strong simple shapes survive and busy ones turn to mud.
 - **The about page:** the illustration is referenced in `resources/views/public/about.blade.php`.
 
 Use photographs you own or have licensed. Do not take images from a search engine.

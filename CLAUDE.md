@@ -16,6 +16,8 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   `ContentTokens` ([[placeholders]] in page copy, resolved from settings, with unset
   lines dropped), `LaunchChecklist` (what a fresh install still needs).
 - `public/assets/brand` — the logo suite, favicons and social card.
+  `public/assets/photos` — photography that ships with the application; the homepage hero
+  is one of these, and `home.hero_image` replaces it when a business uploads its own.
   `public/assets/illustrations` — service artwork used until real photography is uploaded.
 - `app/Http/Controllers` — public controllers at the root, tracking under `Tracking/`,
   admin under `Admin/`.

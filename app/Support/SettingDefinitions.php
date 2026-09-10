@@ -168,7 +168,7 @@ class SettingDefinitions
             ],
             'home.hero_image' => [
                 'group' => 'home', 'type' => self::TYPE_IMAGE, 'label' => 'Hero photograph',
-                'help' => 'Optional. A wide photograph of your own operation, cargo or vehicles. Leave empty to use the built in harbour artwork.',
+                'help' => 'Optional. A wide photograph of your own operation, cargo or vehicles, twice as wide as it is tall. Keep the left third free of detail: the headline sits over it. Leave empty to use the photograph bundled with the application.',
                 'default' => null,
             ],
             'home.services_heading' => [
