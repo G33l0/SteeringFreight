@@ -97,10 +97,15 @@ class TrackingChatController extends Controller
 
         return response()->json([
             'status' => $conversation->status->value,
+            // Who the customer is talking to, and whether anybody has joined
+            // yet. The real member of staff behind the reply is never sent to
+            // the browser; the panel is where that is visible.
+            'agent' => $conversation->agent_alias,
+            'waiting' => ! $conversation->hasAgent(),
             'messages' => $messages->map(fn (ChatMessage $message) => [
                 'id' => $message->getKey(),
                 'from_staff' => $message->fromStaff(),
-                'sender' => $message->fromStaff() ? company_name() : $message->sender_name,
+                'sender' => $message->fromStaff() ? $conversation->agentName() : $message->sender_name,
                 'body' => $message->body,
                 'sent_at' => $message->created_at?->toDayDateTimeString(),
             ])->values(),

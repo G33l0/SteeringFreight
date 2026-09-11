@@ -6,7 +6,12 @@
 @endphp
 
 <div class="mt-5 border border-ink-100 bg-white"
-     x-data="trackingChat({ endpoint: '{{ $endpoint }}', interval: {{ $pollInterval }}, lastId: {{ $messages->max('id') ?? 0 }} })">
+     x-data="trackingChat({
+        endpoint: '{{ $endpoint }}',
+        interval: {{ $pollInterval }},
+        lastId: {{ $messages->max('id') ?? 0 }},
+        agent: @js($conversation->agent_alias),
+     })">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 px-5 py-3">
         <div>
             <p class="font-display text-sm font-semibold">{{ $conversation->subject ?: 'Shipment '.$shipment->tracking_number }}</p>
@@ -24,6 +29,25 @@
         to start a new one.
     </div>
 
+    {{--
+        Nobody has picked the conversation up yet. The customer sees that
+        somebody is coming rather than an empty panel, and the notice takes
+        itself off the screen the moment an agent joins.
+    --}}
+    <div x-show="! cleared && ! agent" x-cloak
+         class="flex items-center gap-3 border-b border-ink-100 bg-ink-50 px-5 py-4 text-sm text-ink-600">
+        <span class="relative flex h-2.5 w-2.5 shrink-0">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-500 opacity-60"></span>
+            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-600"></span>
+        </span>
+        A live agent will join you shortly.
+    </div>
+
+    <div x-show="! cleared && agent" x-cloak
+         class="border-b border-ink-100 bg-ink-50 px-5 py-3 text-sm text-ink-600">
+        <span x-text="agent" class="font-semibold text-ink-900"></span> has joined this conversation.
+    </div>
+
     <div x-ref="thread" x-show="! cleared" class="max-h-96 space-y-4 overflow-y-auto px-5 py-4">
         @foreach ($messages as $message)
             <div @class(['flex', 'justify-end' => ! $message->fromStaff()])>
@@ -33,7 +57,7 @@
                     'bg-accent-50 text-ink-900' => ! $message->fromStaff(),
                 ])>
                     <p class="text-xs font-semibold {{ $message->fromStaff() ? 'text-ink-600' : 'text-accent-700' }}">
-                        {{ $message->fromStaff() ? company_name() : $message->sender_name }}
+                        {{ $message->fromStaff() ? $conversation->agentName() : $message->sender_name }}
                     </p>
                     <p class="mt-1 whitespace-pre-line leading-relaxed">{{ $message->body }}</p>
                     <p class="mt-1.5 text-[11px] text-ink-400">{{ $message->created_at->format('j M Y, H:i') }}</p>

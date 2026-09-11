@@ -86,6 +86,20 @@
                     @endif
                 </p>
 
+                {{-- The name the customer sees against every reply on this thread. --}}
+                @if ($conversation->agent_alias)
+                    <p class="mt-3 text-xs leading-relaxed text-ink-500">
+                        The customer sees these replies from
+                        <span class="font-semibold text-ink-700">{{ $conversation->agent_alias }}</span>,
+                        not from your own account. Sign off as {{ $conversation->agent_alias }}.
+                    </p>
+                @else
+                    <p class="mt-3 text-xs leading-relaxed text-ink-500">
+                        The customer is being shown a waiting notice. A display name is chosen for
+                        this conversation as soon as you reply to it or take it.
+                    </p>
+                @endif
+
                 @can('assign', $conversation)
                     <form method="POST" action="{{ route('admin.messages.assign', $conversation) }}" class="mt-4 space-y-3">
                         @csrf

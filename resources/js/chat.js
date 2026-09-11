@@ -9,11 +9,14 @@
  * answers 404 from that moment, and the page takes the thread off the screen
  * rather than leaving a copy of it sitting in the browser.
  */
-export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) {
+export default function trackingChat({ endpoint, interval = 8000, lastId = 0, agent = null }) {
     return {
         endpoint,
         interval,
         lastId,
+        // The first name of whoever has joined, or null while the customer is
+        // still waiting. The poll below fills it in without a page reload.
+        agent,
         messages: [],
         polling: false,
         failures: 0,
@@ -43,6 +46,7 @@ export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) 
         clear() {
             this.cleared = true;
             this.messages = [];
+            this.agent = null;
 
             if (this.timer) {
                 window.clearInterval(this.timer);
@@ -75,6 +79,10 @@ export default function trackingChat({ endpoint, interval = 8000, lastId = 0 }) 
 
                 const payload = await response.json();
                 this.failures = 0;
+
+                if (payload.agent) {
+                    this.agent = payload.agent;
+                }
 
                 payload.messages.forEach((message) => {
                     if (message.id > this.lastId) {
