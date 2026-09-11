@@ -176,7 +176,7 @@
             @if (($phone = setting('contact.phone')) || ($email = setting('contact.email')))
                 <div class="border border-ink-100 p-6">
                     <h2 class="font-display text-base font-semibold">Prefer to talk?</h2>
-                    <p class="mt-2 text-sm leading-relaxed text-ink-600">Our desk is open {{ setting('contact.hours_weekdays') }} on weekdays.</p>
+                    <p class="mt-2 text-sm leading-relaxed text-ink-600">Our desk is open {{ \App\Support\BusinessHours::sentence() }}.</p>
                     @if ($phone ?? false)
                         <p class="mt-2 text-sm"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="font-medium text-accent-700 hover:underline">{{ $phone }}</a></p>
                     @endif

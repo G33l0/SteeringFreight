@@ -10,6 +10,7 @@ use App\Models\Shipment;
 use App\Models\User;
 use App\Notifications\NewCustomerMessage;
 use App\Notifications\StaffReplyPosted;
+use App\Support\AgentNames;
 use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -100,6 +101,9 @@ class ChatService
 
     public function addStaffMessage(ChatConversation $conversation, string $body, User $user): ChatMessage
     {
+        // Replying is joining, for a conversation nobody had picked up yet.
+        $this->assignAgentAlias($conversation);
+
         $message = DB::transaction(function () use ($conversation, $body, $user): ChatMessage {
             $message = $conversation->messages()->create([
                 'sender_type' => MessageSender::Staff,
@@ -177,6 +181,10 @@ class ChatService
      */
     public function assign(ChatConversation $conversation, ?User $assignee, User $actor): void
     {
+        if ($assignee) {
+            $this->assignAgentAlias($conversation);
+        }
+
         $conversation->forceFill([
             'assigned_to' => $assignee?->getKey(),
             'assigned_at' => $assignee ? now() : null,
@@ -285,6 +293,31 @@ class ChatService
         }
 
         $this->purgeExpired();
+    }
+
+    /**
+     * Give the conversation the first name the customer will see, once and
+     * once only. Until this is set the customer is shown the waiting notice,
+     * so this is the moment an agent "joins".
+     *
+     * Names already in use on conversations that are still readable are
+     * avoided, so two customers in the same window are not both answered by
+     * the same name.
+     */
+    private function assignAgentAlias(ChatConversation $conversation): void
+    {
+        if ($conversation->agent_alias !== null) {
+            return;
+        }
+
+        $inUse = ChatConversation::query()
+            ->withinRetention()
+            ->whereKeyNot($conversation->getKey())
+            ->whereNotNull('agent_alias')
+            ->pluck('agent_alias')
+            ->all();
+
+        $conversation->forceFill(['agent_alias' => AgentNames::pick($inUse)])->save();
     }
 
     private function notifyStaff(ChatConversation $conversation, ChatMessage $message): void

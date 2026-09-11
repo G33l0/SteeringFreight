@@ -61,7 +61,7 @@ class SettingDefinitions
             'company.intro' => [
                 'group' => 'company', 'type' => self::TYPE_TEXT, 'label' => 'Company description',
                 'help' => 'Two or three sentences. Used in the footer, on the about page and in search results.',
-                'default' => "Portlane Shipping arranges sea and air freight, handles customs entries and delivers cargo to the receiver's door. Every booking is run by a named coordinator who prepares the documents, watches the schedule and keeps the tracking record current.",
+                'default' => "Portlane Shipping arranges sea and air freight, handles customs entries and delivers cargo to the receiver's door. Every booking carries a tracking number you can check at any time, and a team you can reach at any hour.",
                 'rows' => 4,
             ],
             'company.footer_note' => [
@@ -128,21 +128,23 @@ class SettingDefinitions
                 'help' => 'Shown beside the opening hours, for example "West Africa Standard Time". The timezone the application stores dates in is set with APP_TIMEZONE in the .env file.',
                 'default' => config('app.timezone'),
             ],
+            // Set the same value on all three and the site prints one line
+            // rather than three identical rows. See App\Support\BusinessHours.
             'contact.hours_weekdays' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours, Monday to Friday',
-                'default' => '08:00 - 18:00',
+                'default' => '24 hours',
             ],
             'contact.hours_saturday' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours, Saturday',
-                'default' => '09:00 - 13:00',
+                'default' => '24 hours',
             ],
             'contact.hours_sunday' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours, Sunday',
-                'default' => 'Closed',
+                'default' => '24 hours',
             ],
             'contact.hours_note' => [
                 'group' => 'contact', 'type' => self::TYPE_STRING, 'label' => 'Opening hours note',
-                'default' => 'Times shown are local to our operations desk.',
+                'default' => 'Our representatives cover every timezone, so there is someone on the desk whenever you write.',
             ],
             'contact.extra_details' => [
                 'group' => 'contact', 'type' => self::TYPE_JSON, 'label' => 'Additional contact details',

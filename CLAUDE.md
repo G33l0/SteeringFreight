@@ -50,6 +50,18 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   `ChatConversationPolicy` is the single place that decides this, and
   `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an
   unassigned conversation claims it.
+- The customer chat shows a first name, never a real member of staff. `AgentNames` holds
+  fifty of them; `ChatService::assignAgentAlias()` stamps one on the conversation the first
+  time somebody replies or is assigned, avoiding names in use on other live threads, and it
+  never changes afterwards. Until it is set the customer sees "A live agent will join you
+  shortly". The panel always shows the real account, so assignment and the audit trail are
+  unaffected.
+- Opening hours go through `App\Support\BusinessHours`. When the three day settings agree,
+  the site prints one line ("Every day / 24 hours") instead of three identical rows, and
+  `sentence()` is the phrase for the places that write it into prose. No view reads the
+  three hour settings directly.
+- The public site has no staff login link and no utility strip above the header: the branded
+  header is the first thing on the page, and the homepage tab is the company name alone.
 - The customer chat is a window, not a record. It accepts no files at all, and a conversation
   is deleted with its messages `portlane.chat.retention_hours` (24) after its last message —
   `portlane:purge-chat` hourly, plus `ChatService::sweepExpired()` while the chat is used.

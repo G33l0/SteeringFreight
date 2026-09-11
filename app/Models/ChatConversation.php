@@ -87,6 +87,24 @@ class ChatConversation extends Model
         return $this->hasMany(ChatMessage::class)->latest('id');
     }
 
+    /**
+     * True once somebody has joined the chat. Until then the customer sees the
+     * waiting notice rather than an empty thread.
+     */
+    public function hasAgent(): bool
+    {
+        return $this->agent_alias !== null;
+    }
+
+    /**
+     * The name the customer sees against a staff reply: the conversation's own
+     * agent, falling back to the company for a thread that predates this.
+     */
+    public function agentName(): string
+    {
+        return $this->agent_alias ?: company_name();
+    }
+
     public function isOpen(): bool
     {
         return $this->status === ConversationStatus::Open;

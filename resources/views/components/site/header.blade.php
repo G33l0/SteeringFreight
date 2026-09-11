@@ -1,28 +1,14 @@
 @php
-    $phone = setting('contact.phone');
-    $email = setting('contact.email');
     $navServices = \App\Models\Service::published()->ordered()->get(['title', 'slug']);
 @endphp
 
+{{--
+    The branded bar is the first thing on the page. There is deliberately no
+    utility strip above it: a tagline repeated over the logo is the sort of
+    thing that dates a site, and the telephone and email already have a home in
+    the footer and on the contact page.
+--}}
 <header x-data="{ open: false, services: false }" class="relative z-40">
-    <div class="hidden border-b border-ink-100 bg-ink-50 text-sm text-ink-600 md:block">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-2">
-            <p>{{ setting('company.tagline') }}</p>
-            <div class="flex items-center gap-5">
-                @if ($phone)
-                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="inline-flex items-center gap-1.5 hover:text-ink-900">
-                        <x-icon name="phone" class="h-4 w-4" />{{ $phone }}
-                    </a>
-                @endif
-                @if ($email)
-                    <a href="mailto:{{ $email }}" class="inline-flex items-center gap-1.5 hover:text-ink-900">
-                        <x-icon name="mail" class="h-4 w-4" />{{ $email }}
-                    </a>
-                @endif
-            </div>
-        </div>
-    </div>
-
     <div class="border-b border-ink-100 bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
             <x-logo />

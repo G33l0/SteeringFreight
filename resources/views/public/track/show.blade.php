@@ -215,7 +215,7 @@
             <div class="border border-ink-100 bg-ink-50 p-5">
                 <h2 class="font-display text-base font-semibold">Need help?</h2>
                 <p class="mt-2 text-sm leading-relaxed text-ink-600">
-                    Our operations desk is open {{ setting('contact.hours_weekdays') }} on weekdays.
+                    Our operations desk is open {{ \App\Support\BusinessHours::sentence() }}.
                 </p>
                 <div class="mt-3 space-y-1.5 text-sm">
                     @if ($phone = setting('contact.phone'))

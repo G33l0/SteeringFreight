@@ -105,9 +105,9 @@
             <div class="border border-ink-100 p-6">
                 <h2 class="font-display text-base font-semibold">Business hours</h2>
                 <dl class="mt-3 space-y-1.5 text-sm text-ink-700">
-                    <div class="flex justify-between gap-4"><dt>Monday to Friday</dt><dd>{{ setting('contact.hours_weekdays') }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt>Saturday</dt><dd>{{ setting('contact.hours_saturday') }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt>Sunday</dt><dd>{{ setting('contact.hours_sunday') }}</dd></div>
+                    @foreach (\App\Support\BusinessHours::rows() as $label => $hours)
+                        <div class="flex justify-between gap-4"><dt>{{ $label }}</dt><dd>{{ $hours }}</dd></div>
+                    @endforeach
                 </dl>
                 @if ($note = setting('contact.hours_note'))
                     <p class="mt-3 text-xs text-ink-500">{{ ($tz = setting('contact.timezone')) ? rtrim($note, '.').' ('.$tz.').' : $note }}</p>
