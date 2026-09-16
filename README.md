@@ -1098,6 +1098,7 @@ Before going live:
 - [ ] `APP_KEY` generated, and `.env` never committed
 - [ ] The domain serves `public/`, not the project root
 - [ ] HTTPS working, with `SESSION_SECURE_COOKIE=true`
+- [ ] `HSTS_MAX_AGE` raised to `31536000` once the certificate is proven (start at `300`)
 - [ ] A strong, unique administrator password; one account per member of staff. The
       application enforces at least twelve characters, and in production also refuses
       passwords known to have appeared in a breach
@@ -1157,6 +1158,7 @@ credentials or sign-in codes.
 | `LOGIN_CODE_ATTEMPTS` | Wrong guesses before a code is thrown away | `5` |
 | `LOGIN_CODE_RESEND` | Seconds before another code may be sent | `60` |
 | `LOGIN_CHALLENGE_TTL` | Minutes a half finished sign in survives | `15` |
+| `HSTS_MAX_AGE` | Seconds a browser refuses plain HTTP. Start at `300`, raise once HTTPS is proven | `31536000` |
 
 ## 40. Project directory structure
 
