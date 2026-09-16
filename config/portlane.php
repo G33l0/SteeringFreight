@@ -127,6 +127,15 @@ return [
         // How long the half finished sign in survives before the password has
         // to be entered again.
         'challenge_ttl' => max(1, (int) env('LOGIN_CHALLENGE_TTL', 15)),
+
+        // How long a browser should refuse to speak plain HTTP to this site,
+        // in seconds. Only sent over a connection that is already secure.
+        //
+        // A browser that has been told this will not ask again until the time
+        // runs out, so a fresh install should start small — HSTS_MAX_AGE=300
+        // while the certificate is being proved — and raise it to a year once
+        // HTTPS is known to be working and renewing. Set to 0 to send nothing.
+        'hsts_max_age' => max(0, (int) env('HSTS_MAX_AGE', 31536000)),
     ],
 
     /*
