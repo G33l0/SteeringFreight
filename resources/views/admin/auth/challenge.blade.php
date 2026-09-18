@@ -31,8 +31,10 @@
         <a href="{{ route('admin.login') }}" class="text-ink-600 hover:underline">Start again</a>
     </div>
 
-    <p class="mt-5 text-xs leading-relaxed text-ink-500">
-        Did not ask for this code? Somebody has your password. Change it once you are signed in
-        and tell whoever administers this site.
-    </p>
+    {{--
+        The "were you expecting this?" warning belongs in the email, and is
+        there. On this screen it would be addressed to somebody who typed the
+        password half a minute ago, which tells them nothing: an unexpected
+        code is a surprise in an inbox, never on a page you just asked for.
+    --}}
 </x-layouts.auth>

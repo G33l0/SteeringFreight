@@ -219,6 +219,33 @@ class TwoFactorLoginTest extends TestCase
             ->assertDontSee($this->codeSentTo($user));
     }
 
+    /**
+     * The warning lives in the email and nowhere else. On the code screen it
+     * would be addressed to whoever typed the password half a minute earlier,
+     * which tells them nothing; in an inbox an unexpected code is the whole
+     * signal that a password has been taken.
+     */
+    public function test_the_unexpected_code_warning_is_in_the_email_not_on_the_screen(): void
+    {
+        $user = $this->admin();
+
+        $this->signInWithPassword($user);
+
+        Notification::assertSentTo($user, LoginCodeIssued::class, function (LoginCodeIssued $notification) use ($user) {
+            $body = collect($notification->toMail($user)->introLines)
+                ->merge($notification->toMail($user)->outroLines)
+                ->implode(' ');
+
+            $this->assertStringContainsString('did not just try to sign in', $body);
+
+            return true;
+        });
+
+        $this->get(route('admin.login.challenge'))
+            ->assertOk()
+            ->assertDontSee('Somebody has your password');
+    }
+
     public function test_the_code_screen_is_useless_without_a_pending_sign_in(): void
     {
         $this->get(route('admin.login.challenge'))->assertRedirect(route('admin.login'));
