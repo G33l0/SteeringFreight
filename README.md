@@ -536,6 +536,15 @@ real account is being arranged — the public forms keep working either way.
 
 Add `--test=you@example.com` to skip the prompt and send the test straight away.
 
+**If you pick the log driver, mind `LOG_LEVEL`.** The log mailer writes at `debug` level, so
+the production default of `LOG_LEVEL=error` throws every email away — including the sign-in
+code, leaving you searching a file nothing was ever written to. The command notices and
+offers to set the level for you. It also tells you the real filename: with `LOG_STACK=daily`
+the file is `laravel-2026-01-31.log`, not `laravel.log`.
+
+Locked out anyway? `php artisan portlane:two-factor off` lets you in with a password alone.
+Turn it back on the moment email works.
+
 ### Recommended: send through Brevo
 
 Your host's own mailbox will send mail, but shared hosting IPs are shared with everyone else

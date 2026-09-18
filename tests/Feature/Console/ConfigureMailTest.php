@@ -156,11 +156,47 @@ class ConfigureMailTest extends TestCase
 
     public function test_the_command_can_fall_back_to_the_log_driver(): void
     {
+        file_put_contents($this->path, "MAIL_MAILER=smtp\nLOG_LEVEL=debug\n");
+
         $this->artisan('portlane:configure-mail')
             ->expectsQuestion('Who sends your email?', 'log')
             ->assertSuccessful();
 
         $this->assertSame('log', $this->parsed()['MAIL_MAILER']);
+    }
+
+    /**
+     * The trap this exists to close. The log driver writes at debug level, so
+     * a production LOG_LEVEL of `error` discards every email it writes — and
+     * somebody told to read their sign-in code out of the log searches a file
+     * that was never written to.
+     */
+    public function test_choosing_the_log_driver_offers_to_make_the_log_readable(): void
+    {
+        file_put_contents($this->path, "MAIL_MAILER=smtp\nLOG_LEVEL=error\n");
+
+        $this->artisan('portlane:configure-mail')
+            ->expectsQuestion('Who sends your email?', 'log')
+            ->expectsConfirmation('Set LOG_LEVEL to debug so the emails are readable?', 'yes')
+            ->assertSuccessful();
+
+        $values = $this->parsed();
+
+        $this->assertSame('log', $values['MAIL_MAILER']);
+        $this->assertSame('debug', $values['LOG_LEVEL']);
+    }
+
+    public function test_declining_that_offer_says_plainly_that_the_code_will_be_unreadable(): void
+    {
+        file_put_contents($this->path, "MAIL_MAILER=smtp\nLOG_LEVEL=error\n");
+
+        $this->artisan('portlane:configure-mail')
+            ->expectsQuestion('Who sends your email?', 'log')
+            ->expectsConfirmation('Set LOG_LEVEL to debug so the emails are readable?', 'no')
+            ->expectsOutputToContain('portlane:two-factor off')
+            ->assertSuccessful();
+
+        $this->assertSame('error', $this->parsed()['LOG_LEVEL']);
     }
 
     /**

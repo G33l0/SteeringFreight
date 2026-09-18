@@ -123,11 +123,28 @@ class ConfigureMail extends Command
     /**
      * No mail account yet. The log driver cannot fail, which keeps the public
      * forms working while the real account is being arranged.
+     *
+     * It writes at debug level, so a production LOG_LEVEL of `error` discards
+     * every message silently — including the sign-in code, leaving somebody
+     * searching a file that was never written to. Since the whole point of
+     * choosing this is to be able to read the emails, the level is put right
+     * at the same time.
      */
     private function useLogDriver(EnvFile $env): int
     {
+        $values = ['MAIL_MAILER' => 'log'];
+        $level = mb_strtolower((string) $env->get('LOG_LEVEL'));
+
+        if ($level !== '' && $level !== 'debug') {
+            $this->components->warn("LOG_LEVEL is '{$level}', which throws away messages written at debug level — which is every email the log driver writes.");
+
+            if (confirm('Set LOG_LEVEL to debug so the emails are readable?', default: true)) {
+                $values['LOG_LEVEL'] = 'debug';
+            }
+        }
+
         try {
-            $env->put(['MAIL_MAILER' => 'log']);
+            $env->put($values);
         } catch (Throwable $exception) {
             $this->components->error($exception->getMessage());
 
@@ -136,10 +153,35 @@ class ConfigureMail extends Command
 
         $this->refreshConfiguration();
 
-        $this->components->info('Emails will be written to storage/logs/laravel.log instead of sent.');
-        $this->components->warn('Sign-in codes go to that file too, so read it there when you sign in.');
+        $this->components->info('Emails will be written to '.$this->logFileHint().' instead of sent.');
+        $this->components->warn('Sign-in codes go there too, so read the file when you sign in.');
+
+        if (($values['LOG_LEVEL'] ?? $level) !== 'debug') {
+            $this->components->error('LOG_LEVEL is still '.$level.', so the emails will be discarded and the sign-in code will not be readable anywhere. Use portlane:two-factor off to get in.');
+        }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Where to actually look. The daily driver dates the filename, and telling
+     * somebody to read laravel.log when the file is laravel-2026-01-31.log
+     * sends them hunting through an empty file.
+     */
+    private function logFileHint(): string
+    {
+        $channel = config('logging.default');
+        $channel = $channel === 'stack'
+            ? (config('logging.channels.stack.channels')[0] ?? 'single')
+            : $channel;
+
+        $path = config("logging.channels.{$channel}.path", storage_path('logs/laravel.log'));
+
+        if (config("logging.channels.{$channel}.driver") === 'daily') {
+            $path = preg_replace('/\.log$/', '-'.now()->format('Y-m-d').'.log', (string) $path);
+        }
+
+        return str_replace(base_path().'/', '', (string) $path);
     }
 
     private function offerTest(): int
