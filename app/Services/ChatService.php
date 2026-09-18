@@ -15,7 +15,6 @@ use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
 /**
  * Customer chat.
@@ -43,6 +42,7 @@ class ChatService
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly Settings $settings,
+        private readonly Notifier $notifier,
     ) {}
 
     /**
@@ -129,10 +129,12 @@ class ChatService
             $user,
         );
 
-        if ($conversation->contact_email) {
-            Notification::route('mail', $conversation->contact_email)
-                ->notify(new StaffReplyPosted($conversation, $message));
-        }
+        // The reply is already in the thread the customer is watching, so a
+        // failed "you have a reply" email is a courtesy lost, not the message.
+        $this->notifier->toAddress(
+            $conversation->contact_email,
+            new StaffReplyPosted($conversation, $message),
+        );
 
         return $message;
     }
@@ -332,7 +334,7 @@ class ChatService
             ->values();
 
         foreach ($addresses as $address) {
-            Notification::route('mail', $address)->notify(new NewCustomerMessage($conversation, $message));
+            $this->notifier->toAddress($address, new NewCustomerMessage($conversation, $message));
         }
     }
 }

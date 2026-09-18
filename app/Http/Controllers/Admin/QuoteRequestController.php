@@ -7,17 +7,20 @@ use App\Http\Controllers\Controller;
 use App\Models\QuoteRequest;
 use App\Notifications\QuoteReplySent;
 use App\Services\AuditLogger;
+use App\Services\Notifier;
 use App\Support\Countries;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 class QuoteRequestController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly Notifier $notifier,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -128,7 +131,11 @@ class QuoteRequestController extends Controller
             return $reply;
         });
 
-        Notification::route('mail', $quote->email)->notify(new QuoteReplySent($quote, $reply));
+        // Here the email is the whole point, so a failure is reported to the
+        // person who pressed Send rather than swallowed. The quotation is still
+        // recorded against the enquiry, so nothing is lost and it can be
+        // resent once mail is working.
+        $sent = $this->notifier->toAddress($quote->email, new QuoteReplySent($quote, $reply));
 
         $this->audit->record(
             'quote.replied',
@@ -136,6 +143,12 @@ class QuoteRequestController extends Controller
             "Sent a quotation to {$quote->name} for {$quote->reference}",
             ['reply_id' => $reply->getKey(), 'rate' => $reply->rateLine()],
         );
+
+        if (! $sent) {
+            return back()->withErrors([
+                'reply' => "The quotation was saved against {$quote->reference}, but it could not be emailed to {$quote->email}. Check the mail settings and send it again.",
+            ]);
+        }
 
         return back()->with('status', "Quotation sent to {$quote->email}.");
     }
