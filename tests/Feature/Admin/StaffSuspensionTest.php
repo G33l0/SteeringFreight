@@ -140,7 +140,7 @@ class StaffSuspensionTest extends TestCase
         $this->actingAs($rep)
             ->post(route('admin.shipments.events.store', $shipment), [
                 'shipment_status_id' => $this->trackingStatus('delivered')->id,
-                'happened_at' => now()->toDateTimeString(),
+                'occurred_at' => now()->toDateTimeString(),
             ])
             ->assertRedirect(route('admin.suspended'));
 

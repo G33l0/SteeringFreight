@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Notifications\ShipmentStatusUpdated;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
 /**
  * Shipment writes that touch more than one table: creating a shipment, adding
@@ -23,6 +22,7 @@ class ShipmentService
         private readonly TrackingNumberGenerator $trackingNumbers,
         private readonly AuditLogger $audit,
         private readonly Settings $settings,
+        private readonly Notifier $notifier,
     ) {}
 
     /**
@@ -238,10 +238,17 @@ class ShipmentService
         }
 
         if ($notify && $event->is_public && $status && $this->shouldNotify($shipment, $status)) {
-            Notification::route('mail', $shipment->customerContactEmail())
-                ->notify(new ShipmentStatusUpdated($shipment->fresh(['status']), $event));
+            // The tracking record is the source of truth and is already saved.
+            // Only claim the customer was told when the email actually went,
+            // so the event list does not lie to the person reading it.
+            $sent = $this->notifier->toAddress(
+                $shipment->customerContactEmail(),
+                new ShipmentStatusUpdated($shipment->fresh(['status']), $event),
+            );
 
-            $event->forceFill(['notified_customer' => true])->save();
+            if ($sent) {
+                $event->forceFill(['notified_customer' => true])->save();
+            }
         }
 
         return $event;

@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ContactFormRequest;
 use App\Models\ContactMessage;
 use App\Notifications\ContactMessageReceived;
+use App\Services\Notifier;
 use App\Support\Settings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Notification;
 
 class ContactController extends Controller
 {
+    public function __construct(private readonly Notifier $notifier) {}
+
     public function create(): View
     {
         return view('public.contact', [
@@ -26,11 +28,13 @@ class ContactController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $address = $settings->string('notifications.admin_email');
-
-        if (filter_var($address, FILTER_VALIDATE_EMAIL)) {
-            Notification::route('mail', $address)->notify(new ContactMessageReceived($message));
-        }
+        // The message is already saved. If the alert to the operations desk
+        // cannot be sent, that is the operator's problem to see in the log and
+        // in the dashboard, not a broken page for somebody who just wrote in.
+        $this->notifier->toAddress(
+            $settings->string('notifications.admin_email'),
+            new ContactMessageReceived($message),
+        );
 
         return redirect()
             ->route('contact.create')

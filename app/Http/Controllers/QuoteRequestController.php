@@ -6,14 +6,16 @@ use App\Enums\ShippingMethod;
 use App\Http\Requests\QuoteRequestFormRequest;
 use App\Models\QuoteRequest;
 use App\Notifications\QuoteRequestReceived;
+use App\Services\Notifier;
 use App\Support\Countries;
 use App\Support\Settings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Notification;
 
 class QuoteRequestController extends Controller
 {
+    public function __construct(private readonly Notifier $notifier) {}
+
     public function create(): View
     {
         return view('public.quote', [
@@ -32,11 +34,12 @@ class QuoteRequestController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $address = $settings->string('notifications.admin_email');
-
-        if (filter_var($address, FILTER_VALIDATE_EMAIL)) {
-            Notification::route('mail', $address)->notify(new QuoteRequestReceived($quote));
-        }
+        // The enquiry is on the dashboard either way. A mail outage must not
+        // lose the customer their reference number.
+        $this->notifier->toAddress(
+            $settings->string('notifications.admin_email'),
+            new QuoteRequestReceived($quote),
+        );
 
         return redirect()
             ->route('quote.create')

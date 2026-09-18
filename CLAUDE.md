@@ -84,6 +84,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   destination lanes use it through `x-country-name` / `x-country-list`. The flag is always
   shown beside the country name, never instead of it, because Windows draws flag emoji as the
   two letter code. This is the one place the public site uses emoji.
+- Notification email goes through `App\Services\Notifier`, never the `Notification` facade
+  directly. The queue connection is `sync` on shared hosting, so a send happens inside the
+  web request: an unreachable SMTP server would otherwise throw and show a customer a 500
+  for a message that was already saved. `toAddress()` validates, catches, logs without the
+  recipient's address, and returns whether it went. Customer facing forms ignore the result
+  and carry on; a screen whose purpose was to send an email (a quotation) reports the
+  failure to the member of staff; a shipment event only records `notified_customer` when
+  the email actually went. The one exception is `LoginCodeService`, which must fail closed.
 - Quote requests reach the dashboard and the operations mailbox at once. The alert email sets
   reply-to to the customer, a quotation sent from the panel sets reply-to to the operations
   address and is stored as a `QuoteReply`.
