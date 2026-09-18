@@ -522,6 +522,20 @@ needed. Only if your provider insists on the older port 465 add `MAIL_SCHEME=smt
 framework reads `MAIL_SCHEME`; the `MAIL_ENCRYPTION` line you may have seen in older Laravel
 guides is ignored.)
 
+### The quickest way: `portlane:configure-mail`
+
+```sh
+php artisan portlane:configure-mail
+```
+
+Asks for the host, username, password and send-from address one at a time, writes them to
+`.env`, and offers to send a test message so you find out there and then whether it works.
+The password is hidden as you type and never reaches the shell's history, which a
+`sed` one-liner cannot promise. Choose "Nobody yet" to fall back to the log driver while a
+real account is being arranged — the public forms keep working either way.
+
+Add `--test=you@example.com` to skip the prompt and send the test straight away.
+
 ### Recommended: send through Brevo
 
 Your host's own mailbox will send mail, but shared hosting IPs are shared with everyone else

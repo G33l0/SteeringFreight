@@ -14,6 +14,7 @@ use App\Policies\ChatConversationPolicy;
 use App\Policies\ShipmentDocumentPolicy;
 use App\Policies\ShipmentPolicy;
 use App\Policies\UserPolicy;
+use App\Support\EnvFile;
 use App\Support\Settings;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(Settings::class);
+
+        // Bound rather than constructed where it is used, so a test can point
+        // it at a temporary file. Running the suite must never rewrite the
+        // .env of the installation it is running on.
+        $this->app->bind(EnvFile::class, fn () => new EnvFile(base_path('.env')));
     }
 
     public function boot(): void
