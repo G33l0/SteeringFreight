@@ -84,6 +84,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   destination lanes use it through `x-country-name` / `x-country-list`. The flag is always
   shown beside the country name, never instead of it, because Windows draws flag emoji as the
   two letter code. This is the one place the public site uses emoji.
+- `.env` is only ever edited from the console through `App\Support\EnvFile`, resolved from
+  the container so a test can point it at a temporary file: running the suite must never
+  rewrite the installation's own `.env`. Values are written single quoted, because the
+  parser expands `${...}` inside double quotes and would silently store a password that is
+  not the one typed; a value carrying a single quote is refused rather than written broken,
+  and the file is copied first. `portlane:configure-mail` is the way mail credentials get
+  set — an SMTP key typed at a prompt stays out of the shell's history, and a long block of
+  shell pasted over SSH can arrive with characters missing.
 - Notification email goes through `App\Services\Notifier`, never the `Notification` facade
   directly. The queue connection is `sync` on shared hosting, so a send happens inside the
   web request: an unreachable SMTP server would otherwise throw and show a customer a 500
@@ -114,6 +122,7 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 ```sh
 composer install && npm install
 php artisan migrate --seed
+php artisan portlane:configure-mail   # outgoing email, and a test message to prove it
 php artisan portlane:create-admin
 php artisan portlane:two-factor off   # escape hatch if the sign-in code cannot be sent
 php artisan test
