@@ -30,7 +30,8 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 ## Conventions
 
 - Two staff roles, in `UserRole`: `Administrator` (master admin, `['*']`) and
-  `Representative` (customer representative, chat only). Authorisation goes through gates
+  `Representative` (customer messages, plus raising and updating tracking within an
+  allowance). Authorisation goes through gates
   named `area.action` (`shipments.manage`, `settings.manage`, …) resolved from
   `UserRole::permissions()`; model level rules live in `app/Policies`.
 - Suspension is answered in one place: `User::hasPermission()` returns false when the
@@ -46,6 +47,16 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   setting), `LoginCodeService` issues and verifies, `LoginCodeIssued` delivers. Email is
   the only channel. Only a hash of the code is stored; the code is never audited or
   logged, and `portlane:two-factor off` is the way back in when mail breaks.
+- A representative raises tracking numbers against `users.tracking_quota` (5 by default,
+  raised by an administrator on the staff form) and works on the shipments they raised or
+  that an administrator handed to them through `shipments.assigned_to`. `ShipmentPolicy` is
+  the single place that decides both; `Shipment::scopeHandledBy()` narrows the lists in the
+  query so a shipment they may not open never reaches the page. `assigned_to` is stripped in
+  `ShipmentRequest::prepareForValidation()` for anybody who cannot assign, so a
+  representative cannot hand themselves work. Archiving, customers, settings, staff accounts
+  and the audit log stay shut to them. Which dashboard somebody sees is decided by the role,
+  not by `shipments.view` — a representative reading their own shipments must not land on
+  the master admin dashboard, which counts every shipment and lists quote requests.
 - A representative may open a conversation only when it is assigned to them or unassigned;
   `ChatConversationPolicy` is the single place that decides this, and
   `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an

@@ -42,7 +42,7 @@ enum UserRole: string
     {
         return match ($this) {
             self::Administrator => 'Full access: shipments, tracking updates, statuses, documents, customers, website content, settings, staff accounts and audit logs.',
-            self::Representative => 'Customer messages only. Replies to the conversations assigned to them and sees the tracking details of the shipment each one is about. Cannot create or change shipments.',
+            self::Representative => 'Answers customer messages, and raises and updates tracking numbers within an allowance the administrator sets. Sees only the shipments they raised themselves or were handed. Cannot archive a shipment, reach customer records, settings, staff accounts or the audit log.',
         };
     }
 
@@ -56,10 +56,21 @@ enum UserRole: string
         return match ($this) {
             self::Administrator => ['*'],
             self::Representative => [
-                // Answering customers, and nothing else. Which conversations
-                // they may open is decided by ChatConversationPolicy.
+                // Answering customers. Which conversations they may open is
+                // decided by ChatConversationPolicy.
                 'chat.view',
                 'chat.reply',
+
+                // And raising and updating tracking, within an allowance. These
+                // gates only open the screens; ShipmentPolicy decides, for each
+                // individual shipment, whether this representative may touch
+                // it, and whether they have any allowance left to create
+                // another. Nothing here lets them archive a shipment, see a
+                // customer record, or reach settings, staff accounts or the
+                // audit log.
+                'shipments.view',
+                'shipments.manage',
+                'statuses.view',
             ],
         };
     }

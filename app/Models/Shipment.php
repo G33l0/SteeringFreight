@@ -138,6 +138,36 @@ class Shipment extends Model
         return $this->hasMany(ChatConversation::class)->latest('last_message_at');
     }
 
+    /**
+     * The representative this shipment belongs to: whoever raised it, or
+     * whoever an administrator handed it to.
+     */
+    public function isHandledBy(User $user): bool
+    {
+        return (int) $this->created_by === (int) $user->getKey()
+            || (int) $this->assigned_to === (int) $user->getKey();
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * Narrow a query to the shipments one member of staff may work on. A master
+     * admin is never narrowed; this is the representative's view.
+     *
+     * @param  Builder<Shipment>  $query
+     */
+    public function scopeHandledBy(Builder $query, User $user): void
+    {
+        $query->where(function (Builder $query) use ($user): void {
+            $query->where('created_by', $user->getKey())
+                ->orWhere('assigned_to', $user->getKey());
+        });
+    }
+
     public function isArchived(): bool
     {
         return $this->archived_at !== null;

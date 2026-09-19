@@ -24,6 +24,7 @@ class User extends Authenticatable
         'phone',
         'is_active',
         'access_expires_at',
+        'tracking_quota',
     ];
 
     protected $hidden = [
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'login_code_expires_at' => 'datetime',
             'login_code_sent_at' => 'datetime',
             'login_code_attempts' => 'integer',
+            'tracking_quota' => 'integer',
         ];
     }
 
@@ -61,6 +63,18 @@ class User extends Authenticatable
     public function assignedConversations(): HasMany
     {
         return $this->hasMany(ChatConversation::class, 'assigned_to');
+    }
+
+    /** @return HasMany<Shipment, $this> */
+    public function shipmentsCreated(): HasMany
+    {
+        return $this->hasMany(Shipment::class, 'created_by');
+    }
+
+    /** @return HasMany<Shipment, $this> */
+    public function shipmentsAssigned(): HasMany
+    {
+        return $this->hasMany(Shipment::class, 'assigned_to');
     }
 
     /**
@@ -127,6 +141,36 @@ class User extends Authenticatable
     public function isUsable(): bool
     {
         return $this->is_active && ! $this->isSuspended();
+    }
+
+    /**
+     * Shipments this account has raised, which is what the allowance counts.
+     *
+     * Archived ones are included on purpose: the allowance is how many tracking
+     * numbers this representative has put into the world, and archiving one
+     * does not take it back off the customer who holds it.
+     */
+    public function trackingUsed(): int
+    {
+        return $this->shipmentsCreated()->count();
+    }
+
+    public function trackingRemaining(): int
+    {
+        return max(0, (int) $this->tracking_quota - $this->trackingUsed());
+    }
+
+    /**
+     * A master admin raises tracking numbers without a ceiling; the allowance
+     * exists to govern what a representative may do unsupervised.
+     */
+    public function canRaiseTracking(): bool
+    {
+        if (! $this->hasPermission('shipments.manage')) {
+            return false;
+        }
+
+        return $this->role === UserRole::Administrator || $this->trackingRemaining() > 0;
     }
 
     public function initials(): string

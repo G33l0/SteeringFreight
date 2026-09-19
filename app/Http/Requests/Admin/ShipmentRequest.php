@@ -34,6 +34,15 @@ class ShipmentRequest extends FormRequest
                 Rule::unique('shipments', 'tracking_number')->ignore($shipment?->getKey()),
             ],
             'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')],
+            // Only ever reaches the model when the person submitting may
+            // assign; see prepareForValidation(). A representative posting this
+            // field by hand has it dropped before the rules are even read.
+            'assigned_to' => [
+                'nullable', 'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('is_active', true)
+                    ->whereNull('suspended_at')),
+            ],
             'customer_name' => ['nullable', 'string', 'max:160'],
             'customer_email' => ['nullable', 'email:filter', 'max:180'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
@@ -96,6 +105,17 @@ class ShipmentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Handing a shipment to a representative is an administrator's call.
+        // Anybody else has the field removed before the rules are read, so a
+        // representative who adds it to the form by hand has nothing to slip
+        // past — the value never reaches validation, let alone the model.
+        $shipment = $this->route('shipment');
+
+        if (! $this->user()?->can('assign', $shipment instanceof Shipment ? $shipment : new Shipment)) {
+            $this->request->remove('assigned_to');
+            $this->json?->remove('assigned_to');
+        }
+
         $this->merge([
             'notifications_enabled' => $this->boolean('notifications_enabled'),
             'tracking_number' => $this->filled('tracking_number')
