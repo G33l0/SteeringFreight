@@ -9,7 +9,7 @@
         @if ($services->isEmpty())
             <x-admin.empty message="No services yet." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Title</th><th>Slug</th><th>Order</th><th>Published</th><th>On homepage</th><th><span class="sr-only">Actions</span></th></tr></thead>
                     <tbody>

@@ -4,7 +4,7 @@
         title="Freight services"
         intro="Sea and air freight, customs clearance, warehousing and final delivery, coordinated by one team." />
 
-    <div class="mx-auto max-w-6xl space-y-px bg-ink-100 px-6 py-14 sm:py-16">
+    <div class="mx-auto max-w-6xl space-y-px bg-ink-100 px-gutter py-section-sm">
         @foreach ($services as $service)
             <article class="grid gap-8 bg-white p-6 sm:p-8 lg:grid-cols-[0.85fr_1.15fr]">
                 <div>

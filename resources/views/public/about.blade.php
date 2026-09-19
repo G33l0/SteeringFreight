@@ -10,13 +10,13 @@
         $banner = \App\Services\MediaService::url(setting('company.about_image'));
     @endphp
 
-    <div class="mx-auto max-w-6xl px-6 pt-10">
+    <div class="mx-auto max-w-6xl px-gutter pt-10">
         <img src="{{ $banner ?? asset('assets/photos/about-banner.webp') }}"
              alt="{{ $banner ? '' : 'A container terminal seen from above: quay cranes along the berth, a vessel alongside and rows of stacked containers' }}"
-             class="aspect-[12/5] w-full rounded object-cover" width="1800" height="750" loading="lazy">
+             class="aspect-[3/2] w-full rounded object-cover sm:aspect-[12/5]" width="1800" height="750" loading="lazy">
     </div>
 
-    <div class="mx-auto grid max-w-6xl gap-12 px-6 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:py-20">
+    <div class="mx-auto grid max-w-6xl gap-12 px-gutter py-section lg:grid-cols-[1.2fr_0.8fr]">
         <div class="copy">
             @if ($page?->body)
                 {!! \App\Support\ContentFormatter::render($page->body) !!}

@@ -31,7 +31,7 @@
         @if ($logs->isEmpty())
             <x-admin.empty message="No log entries match these filters." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>When</th><th>User</th><th>Action</th><th>Details</th><th>Subject</th><th>IP</th></tr></thead>
                     <tbody>

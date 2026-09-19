@@ -4,7 +4,7 @@
         :title="setting('home.reviews_heading')"
         :intro="setting('home.reviews_intro')" />
 
-    <div class="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+    <div class="mx-auto max-w-6xl px-gutter py-section-sm">
         @if ($reviews->isEmpty())
             <div class="mx-auto max-w-2xl border border-ink-100 bg-ink-50 p-8 text-center">
                 <h2 class="font-display text-lg font-semibold">No reviews published yet</h2>

@@ -16,7 +16,7 @@
                 @if ($collection->isEmpty())
                     <x-admin.empty message="Nothing configured." />
                 @else
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll">
                         <table class="data-table">
                             <thead>
                                 <tr><th>Name</th><th>Stage</th><th>In use</th><th>Notify</th><th>Active</th><th><span class="sr-only">Actions</span></th></tr>

@@ -45,7 +45,7 @@
         @if ($quotes->isEmpty())
             <x-admin.empty message="No quote requests match these filters." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Reference</th><th>Name</th><th>Route</th><th>Method</th><th>Status</th><th>Quotation</th><th>Received</th></tr></thead>
                     <tbody>

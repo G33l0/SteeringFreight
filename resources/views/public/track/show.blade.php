@@ -26,7 +26,7 @@
     @endphp
 
     <section class="border-b border-ink-100 bg-ink-50">
-        <div class="mx-auto max-w-5xl px-6 py-10">
+        <div class="mx-auto max-w-5xl px-gutter py-10">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <p class="text-sm font-medium text-ink-500">Tracking number</p>
@@ -79,7 +79,7 @@
         </div>
     </section>
 
-    <div class="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.25fr_0.75fr]">
+    <div class="mx-auto grid max-w-5xl gap-10 px-gutter py-section-sm lg:grid-cols-[1.25fr_0.75fr]">
         <div class="space-y-10">
             {{--
                 The stages reached, and the destination. Everything between the

@@ -13,13 +13,13 @@
     <x-brand-styles />
 </head>
 <body class="min-h-screen bg-ink-950 antialiased">
-    <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
+    <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-gutter py-12">
         <div class="text-center">
             <x-logo tone="light" size="lg" />
             <p class="mt-2 text-sm text-ink-400">Staff area</p>
         </div>
 
-        <div class="mt-8 rounded border border-white/10 bg-white p-6 sm:p-8">
+        <div class="mt-8 rounded border border-white/10 bg-white p-6 shadow-raised sm:p-8">
             <h1 class="font-display text-xl font-semibold">{{ $title }}</h1>
 
             @if (session('status'))

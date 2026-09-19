@@ -11,7 +11,7 @@
 @endphp
 
 <footer class="mt-20 border-t border-ink-800 bg-ink-950 text-ink-200">
-    <div class="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mx-auto grid max-w-6xl gap-10 px-gutter py-section-sm sm:grid-cols-2 lg:grid-cols-4">
         <div>
             <x-logo tone="light" />
             <p class="mt-4 text-sm leading-relaxed text-ink-300">
@@ -99,7 +99,7 @@
     </div>
 
     <div class="border-t border-ink-800">
-        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-5 text-xs text-ink-400 sm:flex-row sm:items-center sm:justify-between">
+        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-gutter py-5 text-xs text-ink-400 sm:flex-row sm:items-center sm:justify-between">
             <p>&copy; {{ date('Y') }} {{ setting('company.legal_name', company_name()) }}. All rights reserved.</p>
             <div class="flex gap-5">
                 <a href="{{ route('privacy') }}" class="hover:text-white">Privacy Policy</a>

@@ -64,7 +64,7 @@
         @if ($shipments->isEmpty())
             <x-admin.empty message="No shipments match these filters." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead>
                         <tr>

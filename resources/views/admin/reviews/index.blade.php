@@ -15,7 +15,7 @@
         @if ($reviews->isEmpty())
             <x-admin.empty message="No reviews yet." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Client</th><th>Rating</th><th>Review</th><th>Published</th><th><span class="sr-only">Actions</span></th></tr></thead>
                     <tbody>

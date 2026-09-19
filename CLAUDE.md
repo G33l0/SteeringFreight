@@ -138,7 +138,18 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 - Never invent business facts. Address, telephone, registration number and operating lanes
   ship empty; the views hide those sections until they are filled in.
 - Brand colours are published as CSS custom properties from the settings, so the palette is
-  changeable without a front end rebuild.
+  changeable without a front end rebuild. Every colour the site draws with is a token in the
+  `@theme` block of `resources/css/app.css` — a hex in a component rule would not follow a
+  rebrand, and `DesignSystemTest` fails if one appears.
+- The page rhythm is fluid rather than stepped: `px-gutter` is the page margin and
+  `py-section` / `py-section-sm` / `py-hero` the vertical steps, with `text-display`,
+  `text-heading`, `text-title` and `text-subtitle` the heading sizes. They interpolate with
+  `clamp()` between a phone and a desktop, so a heading does not jump at a breakpoint and a
+  page added later inherits the same spacing by using the same class. Admin tables sit in
+  `.table-scroll`; a control is at least 2.75rem tall and a field is never under 16px on a
+  phone, because Safari zooms the page in on a smaller one and never zooms back out.
+  `[x-cloak]` is defined in the same stylesheet: without it every menu is painted open until
+  Alpine boots.
 - Private files (shipment documents) live on the `local` disk and are only ever streamed
   by a controller that checks authorisation. The chat stores no files at all.
 - SQLite is a supported production database, not only the test harness: WAL, a busy timeout

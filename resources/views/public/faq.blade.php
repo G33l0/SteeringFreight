@@ -4,7 +4,7 @@
         title="Frequently asked questions"
         intro="Bookings, documents, transit times and tracking, answered in plain language." />
 
-    <div class="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+    <div class="mx-auto max-w-3xl px-gutter py-section-sm">
         @forelse ($groups as $category => $faqs)
             <section class="mb-12 last:mb-0">
                 <h2 class="font-display text-lg font-semibold">{{ $category }}</h2>
