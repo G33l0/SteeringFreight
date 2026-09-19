@@ -9,7 +9,7 @@
         @if ($faqs->isEmpty())
             <x-admin.empty message="No questions yet." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Question</th><th>Category</th><th>Order</th><th>Published</th><th>Homepage</th><th><span class="sr-only">Actions</span></th></tr></thead>
                     <tbody>

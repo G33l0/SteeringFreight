@@ -15,7 +15,7 @@
         @if ($documents->isEmpty())
             <x-admin.empty message="No documents uploaded yet." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Title</th><th>Shipment</th><th>Type</th><th>Visibility</th><th>Size</th><th>Uploaded</th></tr></thead>
                     <tbody>

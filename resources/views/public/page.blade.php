@@ -1,7 +1,7 @@
 <x-layouts.public :metaTitle="$metaTitle" :metaDescription="$metaDescription">
     <x-page-header :title="$page->title" :intro="$page->intro" />
 
-    <article class="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+    <article class="mx-auto max-w-3xl px-gutter py-section-sm">
         <div class="copy">
             {!! \App\Support\ContentFormatter::render($page->body) !!}
         </div>

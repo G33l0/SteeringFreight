@@ -1,7 +1,7 @@
 <x-layouts.public :metaTitle="$metaTitle" :metaDescription="$metaDescription">
     <x-page-header eyebrow="Contact" title="Contact us" :intro="setting('contact.response_note')" />
 
-    <div class="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr] lg:py-16">
+    <div class="mx-auto grid max-w-5xl gap-10 px-gutter py-section-sm lg:grid-cols-[1.2fr_0.8fr]">
         <div>
             @if (session('status'))
                 <x-alert class="mb-6">{{ session('status') }}</x-alert>

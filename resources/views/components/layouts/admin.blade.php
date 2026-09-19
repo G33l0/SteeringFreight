@@ -14,7 +14,7 @@
     <x-brand-styles />
 </head>
 <body class="min-h-screen bg-ink-50 antialiased">
-<div x-data="{ nav: false }" class="lg:flex">
+<div x-data="{ nav: false }" x-effect="document.body.classList.toggle('nav-locked', nav)" class="lg:flex">
     {{-- Sidebar --}}
     <div x-show="nav" x-cloak class="fixed inset-0 z-30 bg-ink-950/50 lg:hidden" @click="nav = false" aria-hidden="true"></div>
 
@@ -28,7 +28,7 @@
                     <span class="font-semibold text-white">{{ $brandLead }}</span>@if ($brandRest)<span class="font-normal text-ink-300"> {{ $brandRest }}</span>@endif
                 </span>
             </a>
-            <button type="button" @click="nav = false" class="rounded p-1 text-ink-300 lg:hidden" aria-label="Close navigation">
+            <button type="button" @click="nav = false" class="-mr-1 flex h-10 w-10 items-center justify-center rounded text-ink-300 lg:hidden" aria-label="Close navigation">
                 <x-icon name="close" class="h-5 w-5" />
             </button>
         </div>
@@ -106,7 +106,7 @@
         <header class="sticky top-0 z-20 border-b border-ink-100 bg-white">
             <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
-                    <button type="button" @click="nav = true" class="rounded p-1.5 text-ink-600 lg:hidden" aria-label="Open navigation">
+                    <button type="button" @click="nav = true" class="-ml-1 flex h-11 w-11 items-center justify-center rounded text-ink-600 lg:hidden" aria-label="Open navigation">
                         <x-icon name="menu" class="h-6 w-6" />
                     </button>
                     <h1 class="truncate font-display text-lg font-semibold">{{ $title }}</h1>
@@ -118,7 +118,7 @@
                     @endisset
 
                     <div x-data="{ open: false }" class="relative">
-                        <button type="button" @click="open = ! open" class="flex items-center gap-2 rounded border border-ink-100 px-2.5 py-1.5 text-sm hover:bg-ink-50">
+                        <button type="button" @click="open = ! open" class="flex min-h-10 items-center gap-2 rounded border border-ink-100 px-2.5 py-1.5 text-sm hover:bg-ink-50">
                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-ink-800 text-[11px] font-semibold text-white">
                                 {{ auth()->user()->initials() }}
                             </span>
@@ -127,12 +127,12 @@
                         </button>
 
                         <div x-show="open" x-cloak @click.outside="open = false"
-                             class="absolute right-0 top-full z-30 mt-1 w-52 border border-ink-100 bg-white py-1 shadow-lg">
+                             class="absolute right-0 top-full z-30 mt-1 w-52 rounded border border-ink-100 bg-white py-1 shadow-raised">
                             <p class="px-4 py-2 text-xs text-ink-500">{{ auth()->user()->role->label() }}</p>
-                            <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-2 text-sm hover:bg-ink-50">Your profile</a>
+                            <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-2.5 text-sm hover:bg-ink-50">Your profile</a>
                             <form method="POST" action="{{ route('admin.logout') }}">
                                 @csrf
-                                <button type="submit" class="w-full px-4 py-2 text-left text-sm text-alert-700 hover:bg-ink-50">Sign out</button>
+                                <button type="submit" class="w-full px-4 py-2.5 text-left text-sm text-alert-700 hover:bg-ink-50">Sign out</button>
                             </form>
                         </div>
                     </div>

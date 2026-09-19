@@ -1,7 +1,7 @@
 <x-layouts.public :metaTitle="$metaTitle" :metaDescription="$metaDescription">
     <section class="bg-ink-950">
-        <div class="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-            <h1 class="text-3xl font-semibold text-white sm:text-4xl">Track your shipment</h1>
+        <div class="mx-auto max-w-3xl px-gutter py-section">
+            <h1 class="text-heading font-semibold text-white">Track your shipment</h1>
             <p class="mt-3 text-ink-300">{{ setting('tracking.intro') }}</p>
 
             <div class="mt-8 rounded border border-white/15 bg-white/5 p-5">
@@ -15,7 +15,7 @@
         </div>
     </section>
 
-    <div class="mx-auto grid max-w-5xl gap-8 px-6 py-14 sm:grid-cols-2">
+    <div class="mx-auto grid max-w-5xl gap-8 px-gutter py-section-sm sm:grid-cols-2">
         <div class="border border-ink-100 p-6">
             <h2 class="font-display text-lg font-semibold">Can't find your number?</h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-600">

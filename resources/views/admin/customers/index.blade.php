@@ -15,7 +15,7 @@
         @if ($customers->isEmpty())
             <x-admin.empty message="No customers found." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead>
                         <tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Shipments</th><th><span class="sr-only">Actions</span></th></tr>

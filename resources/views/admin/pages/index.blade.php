@@ -9,7 +9,7 @@
         @if ($pages->isEmpty())
             <x-admin.empty message="No pages yet." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Title</th><th>Address</th><th>Published</th><th>Updated</th><th><span class="sr-only">Actions</span></th></tr></thead>
                     <tbody>

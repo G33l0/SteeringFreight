@@ -15,7 +15,7 @@
         @if ($messages->isEmpty())
             <x-admin.empty message="No messages found." />
         @else
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="data-table">
                     <thead><tr><th>Subject</th><th>From</th><th>Status</th><th>Received</th></tr></thead>
                     <tbody>

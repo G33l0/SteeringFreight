@@ -4,7 +4,7 @@
     </x-slot:actions>
 
     <x-admin.panel compact>
-        <div class="overflow-x-auto">
+        <div class="table-scroll">
             <table class="data-table">
                 <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Tracking</th><th>Access ends</th><th>Last sign in</th><th><span class="sr-only">Actions</span></th></tr></thead>
                 <tbody>

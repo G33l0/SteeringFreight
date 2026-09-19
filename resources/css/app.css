@@ -5,6 +5,12 @@
 |
 | A restrained palette: deep navy for structure, a muted rust accent for
 | actions, and warm greys for surfaces. Two typefaces only.
+|
+| Every colour the site draws with is declared here, so a rebrand is a change
+| of custom properties rather than a hunt through component rules. The type and
+| spacing steps are fluid: they interpolate between a phone and a desktop with
+| clamp() rather than jumping at a breakpoint, which is what keeps a heading
+| from filling four lines on a narrow screen.
 */
 @theme {
     --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -36,14 +42,50 @@
     --color-positive-100: #dcefe5;
     --color-caution-700: #8a5a10;
     --color-caution-100: #fbeed6;
+    --color-alert-800: #7d2718;
     --color-alert-700: #98301f;
     --color-alert-100: #fadfda;
+
+    /* The two neutral status colours. They carry a meaning of their own on the
+       tracking page — in transit, and at the border — so they are hues rather
+       than another grey, mixed towards the navy so they sit with the brand. */
+    --color-info-700: #1f4d79;
+    --color-info-100: #dce7f3;
+    --color-sea-700: #12605c;
+    --color-sea-100: #d5ebe8;
+
+    /* Type steps. Used as text-display, text-heading, text-title, text-subtitle. */
+    --text-display: clamp(2.35rem, 1.65rem + 3vw, 3.5rem);
+    --text-display--line-height: 1.06;
+    --text-display--letter-spacing: -0.02em;
+    --text-heading: clamp(1.95rem, 1.55rem + 1.7vw, 2.75rem);
+    --text-heading--line-height: 1.12;
+    --text-heading--letter-spacing: -0.018em;
+    --text-title: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+    --text-title--line-height: 1.2;
+    --text-title--letter-spacing: -0.015em;
+    --text-subtitle: clamp(1.1rem, 1.03rem + 0.3vw, 1.3rem);
+    --text-subtitle--line-height: 1.35;
+
+    /* Rhythm. px-gutter is the page margin; py-section and py-section-sm are the
+       two vertical steps every public section uses, so the spacing between bands
+       is the same on every page. */
+    --spacing-gutter: clamp(1.25rem, 0.95rem + 1.1vw, 1.75rem);
+    --spacing-section: clamp(3.5rem, 2.6rem + 3.2vw, 5rem);
+    --spacing-section-sm: clamp(2.75rem, 2.2rem + 2vw, 4rem);
+    --spacing-hero: clamp(4.5rem, 3rem + 5.4vw, 7rem);
+
+    --shadow-card: 0 1px 2px rgb(7 19 30 / 0.05);
+    --shadow-raised: 0 12px 30px -14px rgb(7 19 30 / 0.3);
 }
 
 @layer base {
     html {
         -webkit-text-size-adjust: 100%;
         scroll-behavior: smooth;
+        /* The public header stays put as the page scrolls, so a jump to an
+           anchor has to stop short of it rather than under it. */
+        scroll-padding-top: 5rem;
     }
 
     body {
@@ -51,6 +93,10 @@
         color: var(--color-ink-900);
         font-family: var(--font-sans);
         -webkit-font-smoothing: antialiased;
+        /* A tracking number, an email address or a long place name is customer
+           data: it cannot be shortened, so it wraps rather than pushing a phone
+           sideways. */
+        overflow-wrap: break-word;
     }
 
     h1, h2, h3, h4 {
@@ -59,9 +105,20 @@
         color: var(--color-ink-950);
     }
 
+    /* Alpine only hides these once it has booted. Without this rule the mobile
+       menu, the services dropdown and the admin sidebar are all painted open
+       for as long as the JavaScript takes to arrive. */
+    [x-cloak] {
+        display: none !important;
+    }
+
     :focus-visible {
-        outline: 2px solid var(--color-accent-600);
+        outline: 2px solid var(--color-accent-500);
         outline-offset: 2px;
+        /* The halo is what makes the ring visible on the navy bands, where rust
+           on near black would otherwise be hard to find. It is invisible against
+           a white page, which is where the outline alone already reads. */
+        box-shadow: 0 0 0 4px rgb(255 255 255 / 0.4);
     }
 
     ::selection {
@@ -83,6 +140,8 @@
         gap: 0.5rem;
         border-radius: 0.25rem;
         border: 1px solid transparent;
+        /* 2.75rem is the smallest comfortable target for a thumb. */
+        min-height: 2.75rem;
         padding: 0.7rem 1.15rem;
         font-size: 0.925rem;
         font-weight: 600;
@@ -130,6 +189,7 @@
     }
 
     .btn-sm {
+        min-height: 2.25rem;
         padding: 0.45rem 0.75rem;
         font-size: 0.825rem;
     }
@@ -140,7 +200,7 @@
     }
 
     .btn-danger:hover {
-        background-color: #7d2718;
+        background-color: var(--color-alert-800);
     }
 
     .btn[disabled] {
@@ -164,9 +224,20 @@
         border-radius: 0.25rem;
         border: 1px solid var(--color-ink-200);
         background-color: #fff;
+        min-height: 2.75rem;
         padding: 0.6rem 0.7rem;
         font-size: 0.95rem;
         color: var(--color-ink-950);
+    }
+
+    /* Safari on iPhone zooms the whole page in when a field smaller than 16px
+       takes focus, and never zooms back out. */
+    @media (max-width: 639.98px) {
+        .input,
+        .select,
+        .textarea {
+            font-size: 1rem;
+        }
     }
 
     .input::placeholder,
@@ -204,6 +275,7 @@
         border: 1px solid var(--color-ink-100);
         background-color: #fff;
         border-radius: 0.375rem;
+        box-shadow: var(--shadow-card);
     }
 
     .badge {
@@ -219,8 +291,8 @@
     }
 
     .badge-slate { background: var(--color-ink-100); color: var(--color-ink-700); }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
-    .badge-teal { background: #d5f0ec; color: #115e59; }
+    .badge-blue { background: var(--color-info-100); color: var(--color-info-700); }
+    .badge-teal { background: var(--color-sea-100); color: var(--color-sea-700); }
     .badge-green { background: var(--color-positive-100); color: var(--color-positive-700); }
     .badge-amber { background: var(--color-caution-100); color: var(--color-caution-700); }
     .badge-red { background: var(--color-alert-100); color: var(--color-alert-700); }
@@ -285,6 +357,26 @@
         font-weight: 600;
     }
 
+    /* The admin sidebar slides over the page on a phone, so the page behind it
+       must not scroll. The breakpoint lives here rather than in the handler:
+       turning a tablet from portrait to landscape then releases the page on its
+       own, instead of leaving it locked under a sidebar that is no longer
+       covering anything. */
+    @media (max-width: 1023.98px) {
+        body.nav-locked {
+            overflow: hidden;
+        }
+    }
+
+    /* A table of shipments is wider than a phone however it is styled, so every
+       one of them sits in this wrapper: it scrolls on its own instead of
+       stretching the page, and keeps its momentum on iOS. */
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
     .data-table {
         width: 100%;
         border-collapse: collapse;
@@ -309,6 +401,14 @@
     .data-table tbody tr:hover {
         background-color: var(--color-ink-50);
     }
+
+    @media (max-width: 639.98px) {
+        .data-table th,
+        .data-table td {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
 }
 
 /*
@@ -320,4 +420,23 @@
 @keyframes journey-bob {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(-3px); }
+}
+
+/*
+ * Everything else that moves — the smooth jump to an anchor, the menus, the
+ * hover transitions — stops for the same preference.
+ */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

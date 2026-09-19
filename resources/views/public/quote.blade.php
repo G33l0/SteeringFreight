@@ -4,7 +4,7 @@
         title="Request a quote"
         :intro="setting('quotes.intro')" />
 
-    <div class="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.3fr_0.7fr] lg:py-16">
+    <div class="mx-auto grid max-w-5xl gap-10 px-gutter py-section-sm lg:grid-cols-[1.3fr_0.7fr]">
         <div>
             @if (session('status'))
                 <x-alert class="mb-6">{{ session('status') }}</x-alert>

@@ -52,7 +52,7 @@
             @if ($customer->shipments->isEmpty())
                 <x-admin.empty message="This customer has no shipments yet." />
             @else
-                <div class="overflow-x-auto">
+                <div class="table-scroll">
                     <table class="data-table">
                         <thead><tr><th>Tracking number</th><th>Route</th><th>Status</th><th>Created</th></tr></thead>
                         <tbody>
