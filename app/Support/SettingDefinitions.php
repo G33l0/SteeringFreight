@@ -265,9 +265,9 @@ class SettingDefinitions
             // them out there.
             'tracking.show_stages' => [
                 'group' => 'tracking', 'type' => self::TYPE_BOOLEAN,
-                'label' => 'Show the stage checklist to customers',
-                'help' => 'The full list of milestones with ticks against the ones reached. Off by default: the progress bar already says where the shipment is, and the list invites questions about stages that have not happened yet. Staff always see it in the panel.',
-                'default' => false,
+                'label' => 'Show the stages reached to customers',
+                'help' => 'The stages this shipment has actually reached, plus the final one shown but not yet marked. Stages in between are left out until they happen, so a customer is shown their shipment rather than a plan. Staff always see the full list in the panel.',
+                'default' => true,
             ],
             'tracking.show_percentage' => [
                 'group' => 'tracking', 'type' => self::TYPE_BOOLEAN,

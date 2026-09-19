@@ -2,7 +2,8 @@
     @php
         $status = $shipment->status;
         $progress = $shipment->progressPercent();
-        $showStages = (bool) setting('tracking.show_stages', false);
+        $showStages = (bool) setting('tracking.show_stages', true);
+        $customerTimeline = \App\Models\ShipmentStatus::customerTimelineFor($shipment);
         $showPercentage = (bool) setting('tracking.show_percentage', false);
         $details = collect([
             'Origin' => $shipment->originLabel(),
@@ -80,12 +81,16 @@
 
     <div class="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.25fr_0.75fr]">
         <div class="space-y-10">
-            {{-- Milestones. Operational detail, off unless the business turns it on. --}}
-            @if ($showStages && $timeline->isNotEmpty())
+            {{--
+                The stages reached, and the destination. Everything between the
+                two is left out until it happens: a customer shown eleven greyed
+                out milestones is being shown a plan, not a shipment.
+            --}}
+            @if ($showStages && $customerTimeline->isNotEmpty())
                 <section>
                     <h2 class="font-display text-lg font-semibold">Shipment stages</h2>
                     <ol class="mt-5 space-y-0">
-                        @foreach ($timeline as $milestone)
+                        @foreach ($customerTimeline as $milestone)
                             @php
                                 $reached = $shipment->progress_stage >= $milestone->stage;
                                 $current = ! $shipment->isException()

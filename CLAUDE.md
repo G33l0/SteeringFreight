@@ -65,9 +65,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   (ship, aircraft, train, van) and draws a van for any shipment whose origin and destination
   country match, because that is the leg the customer can picture.
   `TrackingIcons::forStatus()` gives each status a drawing that carries its meaning, so a
-  customs hold reads differently from a weather delay. All SVG, never emoji. The stage
-  checklist and the raw percentage are operational detail, off for customers behind
-  `tracking.show_stages` and `tracking.show_percentage`; staff always see both in the panel.
+  customs hold reads differently from a weather delay. All SVG, never emoji.
+- A customer sees the stages their shipment has actually reached, plus the final one,
+  present but unmarked so the destination is visible from the first day.
+  `ShipmentStatus::customerTimelineFor()` builds that list; the stages in between are left
+  out until they happen, because a customer shown eleven greyed out milestones is being
+  shown a plan rather than a shipment. The panel always shows the full list. The raw
+  percentage stays off behind `tracking.show_percentage`, and the trimmed stage list can be
+  turned off entirely with `tracking.show_stages`.
 - The public site has no staff login link and no utility strip above the header: the branded
   header is the first thing on the page, and the homepage tab is the company name alone.
 - The customer chat is a window, not a record. It accepts no files at all, and a conversation
