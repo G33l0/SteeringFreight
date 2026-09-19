@@ -259,6 +259,22 @@ class SettingDefinitions
                 'default' => 'Something not looking right? Message the team handling your shipment and we will check the file.',
                 'rows' => 2,
             ],
+            // What the customer is shown on the tracking page. The journey bar
+            // answers "where is it" on its own; the stage checklist and the raw
+            // percentage are operational detail, off unless a business wants
+            // them out there.
+            'tracking.show_stages' => [
+                'group' => 'tracking', 'type' => self::TYPE_BOOLEAN,
+                'label' => 'Show the stages reached to customers',
+                'help' => 'The stages this shipment has actually reached, plus the final one shown but not yet marked. Stages in between are left out until they happen, so a customer is shown their shipment rather than a plan. Staff always see the full list in the panel.',
+                'default' => true,
+            ],
+            'tracking.show_percentage' => [
+                'group' => 'tracking', 'type' => self::TYPE_BOOLEAN,
+                'label' => 'Show a progress percentage to customers',
+                'help' => 'A number such as "60%" beside the progress bar. Off by default: it reads as a promise about time that freight cannot keep.',
+                'default' => false,
+            ],
             'tracking.chat_enabled' => [
                 'group' => 'tracking', 'type' => self::TYPE_BOOLEAN, 'label' => 'Allow customers to message the team from the tracking page',
                 'default' => true,

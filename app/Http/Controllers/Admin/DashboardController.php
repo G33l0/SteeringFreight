@@ -22,7 +22,14 @@ class DashboardController extends Controller
     {
         // Customer representatives get their own dashboard: the conversations
         // they are handling, and the ones still waiting to be picked up.
-        if (! $request->user()->hasPermission('shipments.view')) {
+        //
+        // The role decides this, not a permission. A representative can read
+        // shipments now — their own — so keying off shipments.view would put
+        // them in front of the master admin dashboard, which counts every
+        // shipment on the system and lists the quote requests they are not
+        // allowed to see. Which dashboard suits somebody is a question about
+        // their job, not about a single gate.
+        if ($request->user()->isRepresentative()) {
             return $this->representativeDashboard($request);
         }
 

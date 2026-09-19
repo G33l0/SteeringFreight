@@ -30,7 +30,8 @@ tracking, and an admin panel where staff manage shipments, customers and site co
 ## Conventions
 
 - Two staff roles, in `UserRole`: `Administrator` (master admin, `['*']`) and
-  `Representative` (customer representative, chat only). Authorisation goes through gates
+  `Representative` (customer messages, plus raising and updating tracking within an
+  allowance). Authorisation goes through gates
   named `area.action` (`shipments.manage`, `settings.manage`, …) resolved from
   `UserRole::permissions()`; model level rules live in `app/Policies`.
 - Suspension is answered in one place: `User::hasPermission()` returns false when the
@@ -46,6 +47,16 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   setting), `LoginCodeService` issues and verifies, `LoginCodeIssued` delivers. Email is
   the only channel. Only a hash of the code is stored; the code is never audited or
   logged, and `portlane:two-factor off` is the way back in when mail breaks.
+- A representative raises tracking numbers against `users.tracking_quota` (5 by default,
+  raised by an administrator on the staff form) and works on the shipments they raised or
+  that an administrator handed to them through `shipments.assigned_to`. `ShipmentPolicy` is
+  the single place that decides both; `Shipment::scopeHandledBy()` narrows the lists in the
+  query so a shipment they may not open never reaches the page. `assigned_to` is stripped in
+  `ShipmentRequest::prepareForValidation()` for anybody who cannot assign, so a
+  representative cannot hand themselves work. Archiving, customers, settings, staff accounts
+  and the audit log stay shut to them. Which dashboard somebody sees is decided by the role,
+  not by `shipments.view` — a representative reading their own shipments must not land on
+  the master admin dashboard, which counts every shipment and lists quote requests.
 - A representative may open a conversation only when it is assigned to them or unassigned;
   `ChatConversationPolicy` is the single place that decides this, and
   `ChatConversation::scopeForRepresentative()` is the matching query scope. Replying to an
@@ -60,6 +71,19 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   the site prints one line ("Every day / 24 hours") instead of three identical rows, and
   `sentence()` is the phrase for the places that write it into prose. No view reads the
   three hour settings directly.
+- The tracking page answers "where is my cargo" with a picture. `x-tracking-journey` draws a
+  rail with the vehicle sitting at the point reached; `TrackingIcons::vehicleFor()` picks it
+  (ship, aircraft, train, van) and draws a van for any shipment whose origin and destination
+  country match, because that is the leg the customer can picture.
+  `TrackingIcons::forStatus()` gives each status a drawing that carries its meaning, so a
+  customs hold reads differently from a weather delay. All SVG, never emoji.
+- A customer sees the stages their shipment has actually reached, plus the final one,
+  present but unmarked so the destination is visible from the first day.
+  `ShipmentStatus::customerTimelineFor()` builds that list; the stages in between are left
+  out until they happen, because a customer shown eleven greyed out milestones is being
+  shown a plan rather than a shipment. The panel always shows the full list. The raw
+  percentage stays off behind `tracking.show_percentage`, and the trimmed stage list can be
+  turned off entirely with `tracking.show_stages`.
 - The public site has no staff login link and no utility strip above the header: the branded
   header is the first thing on the page, and the homepage tab is the company name alone.
 - The customer chat is a window, not a record. It accepts no files at all, and a conversation
@@ -69,6 +93,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   keeps a thread alive; `scopeWithinRetention()` is the matching query scope. Message bodies
   are never copied into notification emails or the audit log, and the audit descriptions
   reference the tracking number rather than the customer's name.
+- `SetSecurityHeaders` sends the security headers, including HSTS (only over a secure
+  connection) and a Content Security Policy. The policy allows `'unsafe-eval'` because
+  Alpine evaluates the expressions written in the markup, and `'unsafe-inline'` for styles
+  because the brand colours are an inline block — both are named in the code and asserted in
+  a test, so nobody believes the policy is stricter than it is. `SECURITY_CSP=report`
+  introduces it on a live site without blocking anything.
+- Every public route that does real work is rate limited, and `RouteIntegrityTest` fails if
+  a new one is added without a limiter.
 - Every administrative write is recorded through `AuditLogger`. Never log credentials:
   `changes()` records which fields changed, never their values, and `redact()` masks
   sensitive keys.

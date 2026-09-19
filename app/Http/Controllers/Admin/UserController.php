@@ -51,6 +51,7 @@ class UserController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active');
         $validated['access_expires_at'] = $this->expiryFrom($validated);
+        $validated['tracking_quota'] = (int) ($validated['tracking_quota'] ?? 5);
 
         $user = User::create($validated);
 
@@ -88,6 +89,8 @@ class UserController extends Controller
         if (blank($validated['password'] ?? null)) {
             unset($validated['password']);
         }
+
+        $validated['tracking_quota'] = (int) ($validated['tracking_quota'] ?? $user->tracking_quota);
 
         $user->update($validated);
 
@@ -179,6 +182,7 @@ class UserController extends Controller
             'role' => ['required', Rule::enum(UserRole::class)],
             'password' => [$user ? 'nullable' : 'required', 'confirmed', Password::defaults()],
             'is_active' => ['boolean'],
+            'tracking_quota' => ['nullable', 'integer', 'min:0', 'max:10000'],
             // A new account cannot be created already expired. An existing one
             // may be given a date in the past, which is how an administrator
             // ends somebody's access from the edit screen rather than the list.

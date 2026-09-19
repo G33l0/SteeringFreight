@@ -1137,9 +1137,12 @@ Before going live:
 
 Already handled by the application: CSRF protection on every form, hashed passwords,
 parameter-bound queries, escaped output, mass assignment protection, authorisation checks
-on every admin route, rate limiting on login, the sign-in code, tracking, forms and chat,
-validated file uploads stored outside the web root, and an audit log that never records
-credentials or sign-in codes.
+on every admin route, rate limiting on every public route that does real work, a Content
+Security Policy that refuses scripts from any other origin, validated file uploads stored
+outside the web root, and an audit log that never records credentials or sign-in codes.
+
+Run `composer audit` after every `composer update` to check the installed packages against
+the published advisory database.
 
 ## 39. Environment variable reference
 
@@ -1182,6 +1185,7 @@ credentials or sign-in codes.
 | `LOGIN_CODE_RESEND` | Seconds before another code may be sent | `60` |
 | `LOGIN_CHALLENGE_TTL` | Minutes a half finished sign in survives | `15` |
 | `HSTS_MAX_AGE` | Seconds a browser refuses plain HTTP. Start at `300`, raise once HTTPS is proven | `31536000` |
+| `SECURITY_CSP` | Content Security Policy: `enforce`, `report` or `off` | `enforce` |
 
 ## 40. Project directory structure
 

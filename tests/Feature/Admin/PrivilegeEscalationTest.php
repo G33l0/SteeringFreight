@@ -97,12 +97,11 @@ class PrivilegeEscalationTest extends TestCase
         $rep = $this->representative();
         $shipment = Shipment::factory()->create();
 
+        // Shipments and the status list are deliberately not here any more: a
+        // representative works on the tracking they raised or were handed, and
+        // needs to read the statuses to set one. Everything below is still shut.
         foreach ([
-            route('admin.shipments.index'),
-            route('admin.shipments.create'),
-            route('admin.shipments.show', $shipment),
             route('admin.customers.index'),
-            route('admin.statuses.index'),
             route('admin.settings.edit'),
             route('admin.audit-logs.index'),
             route('admin.documents.index'),

@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ShippingMethod;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ShipmentRequest;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Shipment;
 use App\Models\ShipmentStatus;
+use App\Models\User;
 use App\Services\ShipmentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ShipmentController extends Controller
 {
@@ -24,7 +28,7 @@ class ShipmentController extends Controller
         $this->authorize('viewAny', Shipment::class);
 
         return view('admin.shipments.index', [
-            'shipments' => $this->filtered($request, Shipment::active())
+            'shipments' => $this->filtered($request, $this->visibleTo($request, Shipment::active()))
                 ->paginate((int) config('portlane.per_page.admin'))
                 ->withQueryString(),
             'statuses' => ShipmentStatus::ordered()->get(),
@@ -39,7 +43,7 @@ class ShipmentController extends Controller
         $this->authorize('viewAny', Shipment::class);
 
         return view('admin.shipments.index', [
-            'shipments' => $this->filtered($request, Shipment::archived())
+            'shipments' => $this->filtered($request, $this->visibleTo($request, Shipment::archived()))
                 ->paginate((int) config('portlane.per_page.admin'))
                 ->withQueryString(),
             'statuses' => ShipmentStatus::ordered()->get(),
@@ -58,7 +62,28 @@ class ShipmentController extends Controller
 
     public function store(ShipmentRequest $request): RedirectResponse
     {
-        $shipment = $this->shipments->create($request->validated(), $request->user());
+        // The policy has already refused anybody with nothing left, which is
+        // what closes the screen. This second check exists for the race the
+        // policy cannot see: two submissions in flight together both read the
+        // same remaining allowance and both pass. Re-reading the account inside
+        // a write transaction serialises them, so the second one finds the
+        // allowance spent and is turned away rather than becoming a sixth
+        // tracking number against a quota of five.
+        $shipment = DB::transaction(function () use ($request): ?Shipment {
+            $account = User::whereKey($request->user()->getKey())->lockForUpdate()->first();
+
+            if (! $account?->canRaiseTracking()) {
+                return null;
+            }
+
+            return $this->shipments->create($request->validated(), $request->user());
+        });
+
+        if (! $shipment) {
+            return back()->withInput()->withErrors([
+                'tracking_number' => 'You have used all '.$request->user()->tracking_quota.' of your tracking numbers. Ask the administrator to raise your allowance.',
+            ]);
+        }
 
         return redirect()
             ->route('admin.shipments.show', $shipment)
@@ -136,13 +161,52 @@ class ShipmentController extends Controller
             'customers' => Customer::orderBy('name')->get(['id', 'name', 'company', 'email']),
             'statuses' => ShipmentStatus::active()->ordered()->get(),
             'methods' => ShippingMethod::options(),
+            // Empty for anybody who may not assign, so the field never renders
+            // for a representative in the first place.
+            'representatives' => $this->assignableStaff(),
         ], $extra);
+    }
+
+    /**
+     * Staff a shipment can be handed to: representatives who could actually
+     * open it, which rules out disabled, paused and expired accounts.
+     *
+     * @return Collection<int, User>
+     */
+    private function assignableStaff(): Collection
+    {
+        if (! request()->user()?->can('assign', new Shipment)) {
+            return collect();
+        }
+
+        return User::query()
+            ->usable()
+            ->where('role', UserRole::Representative->value)
+            ->orderBy('name')
+            ->get(['id', 'name', 'tracking_quota']);
     }
 
     /**
      * @param  Builder<Shipment>  $query
      * @return Builder<Shipment>
      */
+    /**
+     * A master admin sees every shipment. Anybody else sees the ones they
+     * raised or were handed, and the list is narrowed in the query rather than
+     * in the view, so a shipment they may not open never reaches the page.
+     *
+     * @param  Builder<Shipment>  $query
+     * @return Builder<Shipment>
+     */
+    private function visibleTo(Request $request, Builder $query): Builder
+    {
+        $user = $request->user();
+
+        return $user->role === UserRole::Administrator
+            ? $query
+            : $query->handledBy($user);
+    }
+
     private function filtered(Request $request, Builder $query): Builder
     {
         $filters = $this->filters($request);

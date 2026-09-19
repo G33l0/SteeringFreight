@@ -83,7 +83,9 @@ Route::get('/track/{tracking_number}', [TrackingController::class, 'show'])
     ->name('track.show');
 
 Route::prefix('track/{tracking_number}')->name('track.')->group(function (): void {
-    Route::get('documents/{document}', [TrackingDocumentController::class, 'download'])->name('documents.download');
+    Route::get('documents/{document}', [TrackingDocumentController::class, 'download'])
+        ->middleware('throttle:tracking')
+        ->name('documents.download');
 
     Route::post('conversations', [TrackingChatController::class, 'store'])
         ->middleware('throttle:chat')

@@ -34,6 +34,64 @@ class SecurityHeadersTest extends TestCase
             ->assertHeader('X-Permitted-Cross-Domain-Policies', 'none');
     }
 
+    public function test_a_content_security_policy_is_sent(): void
+    {
+        config(['portlane.security.csp' => 'enforce']);
+
+        $response = $this->get(route('home'))->assertOk();
+        $policy = $response->headers->get('Content-Security-Policy');
+
+        $this->assertNotNull($policy, 'no content security policy was sent');
+
+        // Nothing loads from another origin.
+        $this->assertStringContainsString("default-src 'self'", $policy);
+        $this->assertStringContainsString("object-src 'none'", $policy);
+        $this->assertStringContainsString("base-uri 'self'", $policy);
+        $this->assertStringContainsString("form-action 'self'", $policy);
+
+        // No third-party script host is allowed in, which is the main thing
+        // this buys: an injected <script src="..."> is refused.
+        $this->assertStringNotContainsString('http:', $policy);
+        $this->assertStringNotContainsString('https:', $policy);
+        $this->assertStringNotContainsString('*', $policy);
+    }
+
+    /**
+     * Named rather than hidden. Alpine evaluates the expressions written in the
+     * markup, so removing this breaks the navigation and the chat; a test that
+     * asserts it is present stops it being dropped by accident and stops
+     * anybody believing the policy is stricter than it is.
+     */
+    public function test_the_policy_allows_what_alpine_needs_and_says_so(): void
+    {
+        config(['portlane.security.csp' => 'enforce']);
+
+        $policy = $this->get(route('home'))->assertOk()->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("script-src 'self' 'unsafe-eval'", $policy);
+        $this->assertStringContainsString("style-src 'self' 'unsafe-inline'", $policy);
+    }
+
+    public function test_the_policy_can_be_introduced_in_report_only_mode(): void
+    {
+        config(['portlane.security.csp' => 'report']);
+
+        $response = $this->get(route('home'))->assertOk();
+
+        $this->assertNotNull($response->headers->get('Content-Security-Policy-Report-Only'));
+        $this->assertNull($response->headers->get('Content-Security-Policy'));
+    }
+
+    public function test_the_policy_can_be_turned_off(): void
+    {
+        config(['portlane.security.csp' => 'off']);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertHeaderMissing('Content-Security-Policy')
+            ->assertHeaderMissing('Content-Security-Policy-Report-Only');
+    }
+
     public function test_hsts_is_sent_over_https(): void
     {
         config(['portlane.security.hsts_max_age' => 31536000]);

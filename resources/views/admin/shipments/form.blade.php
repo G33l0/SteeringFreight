@@ -8,6 +8,21 @@
 <div class="space-y-6">
     <x-admin.panel title="Customer">
         <div class="grid gap-5 sm:grid-cols-2">
+            @if ($representatives->isNotEmpty())
+                <x-form.field name="assigned_to" label="Handled by"
+                              help="Give this shipment to a customer representative so they can update its tracking. Leave empty to keep it with the master admin. Assigning does not use up their allowance — only shipments they raise themselves do.">
+                    <select id="assigned_to" name="assigned_to" class="select">
+                        <option value="">Nobody — master admin only</option>
+                        @foreach ($representatives as $representative)
+                            <option value="{{ $representative->id }}"
+                                @selected((int) $value('assigned_to') === $representative->id)>
+                                {{ $representative->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </x-form.field>
+            @endif
+
             <x-form.field name="customer_id" label="Linked customer" help="Optional. Links the shipment to a saved customer record.">
                 <select id="customer_id" name="customer_id" class="select">
                     <option value="">Not linked</option>

@@ -24,6 +24,38 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetSecurityHeaders
 {
+    /**
+     * Everything the application legitimately loads, and nothing else.
+     *
+     * Scripts, styles, images and fonts are all served from this origin: the
+     * front end is built and committed, the fonts are bundled, and uploaded
+     * images are streamed from the site's own storage. So an injected
+     * <script src="https://somewhere.else/..."> is refused by the browser
+     * before it is fetched.
+     *
+     * Two allowances are deliberate. 'unsafe-inline' for styles, because the
+     * brand colours are published as an inline <style> block and the progress
+     * bar sets a width; an injected stylesheet is a far smaller problem than an
+     * injected script. And 'unsafe-eval' for scripts, because Alpine evaluates
+     * the expressions written in the markup — without it the navigation, the
+     * dropdowns and the chat all stop. Both are named here rather than left for
+     * somebody to discover.
+     *
+     * @var array<string, string>
+     */
+    private const POLICY = [
+        'default-src' => "'self'",
+        'script-src' => "'self' 'unsafe-eval'",
+        'style-src' => "'self' 'unsafe-inline'",
+        'img-src' => "'self' data:",
+        'font-src' => "'self'",
+        'connect-src' => "'self'",
+        'form-action' => "'self'",
+        'base-uri' => "'self'",
+        'frame-ancestors' => "'self'",
+        'object-src' => "'none'",
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
@@ -42,6 +74,31 @@ class SetSecurityHeaders
             $response->headers->set('Strict-Transport-Security', "max-age={$maxAge}");
         }
 
+        $this->applyContentSecurityPolicy($response);
+
         return $response;
+    }
+
+    /**
+     * Report-only is the way to introduce this on a site already serving
+     * customers: the browser complains in its console and blocks nothing, so a
+     * missed dependency shows up without anybody's page breaking.
+     */
+    private function applyContentSecurityPolicy(Response $response): void
+    {
+        $mode = mb_strtolower((string) config('portlane.security.csp', 'enforce'));
+
+        if (! in_array($mode, ['enforce', 'report'], true)) {
+            return;
+        }
+
+        $policy = collect(self::POLICY)
+            ->map(fn (string $value, string $directive) => "{$directive} {$value}")
+            ->implode('; ');
+
+        $response->headers->set(
+            $mode === 'report' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
+            $policy,
+        );
     }
 }

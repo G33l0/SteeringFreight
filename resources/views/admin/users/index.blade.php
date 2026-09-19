@@ -6,7 +6,7 @@
     <x-admin.panel compact>
         <div class="overflow-x-auto">
             <table class="data-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access ends</th><th>Last sign in</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Tracking</th><th>Access ends</th><th>Last sign in</th><th><span class="sr-only">Actions</span></th></tr></thead>
                 <tbody>
                     @foreach ($users as $user)
                         @php
@@ -25,6 +25,13 @@
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->role->label() }}</td>
                             <td><span class="badge {{ $badge }}">{{ $label }}</span></td>
+                            <td class="whitespace-nowrap text-ink-500">
+                                @if ($user->isRepresentative())
+                                    {{ $user->trackingUsed() }} / {{ $user->tracking_quota }}
+                                @else
+                                    <span class="text-ink-400">Unlimited</span>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap text-ink-500">
                                 {{ $user->access_expires_at?->format('j M Y') ?? 'No end date' }}
                             </td>

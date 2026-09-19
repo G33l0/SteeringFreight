@@ -84,6 +84,39 @@ class ShipmentStatus extends Model
         return static::hydrate($rows);
     }
 
+    /**
+     * The stages a customer should be shown for one shipment.
+     *
+     * Not the whole list. A customer reading fourteen milestones, eleven of
+     * them greyed out, is being shown a plan rather than a shipment, and the
+     * ones that have not happened invite questions nobody can answer yet —
+     * "why is customs clearance not done" on a box still on the water.
+     *
+     * So: every stage the shipment has actually reached, as recorded by
+     * whoever is handling it, and then the final stage, present but unreached,
+     * so the destination is visible from the start. The gap between the two is
+     * left out, because it is not news.
+     *
+     * @return Collection<int, static>
+     */
+    public static function customerTimelineFor(Shipment $shipment): Collection
+    {
+        $timeline = static::timeline();
+        $reached = (int) $shipment->progress_stage;
+
+        $visible = $timeline->filter(fn (self $status) => (int) $status->stage <= $reached);
+
+        // The destination, kept on the end unless it is already among the
+        // stages reached — which it is once the shipment has been delivered.
+        $final = $timeline->last();
+
+        if ($final && ! $visible->contains(fn (self $status) => $status->is($final))) {
+            $visible = $visible->push($final);
+        }
+
+        return $visible->values();
+    }
+
     public static function highestStage(): int
     {
         return (int) static::timeline()->max('stage');

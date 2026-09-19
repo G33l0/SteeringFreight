@@ -32,7 +32,16 @@
             @endif
         </x-form.field>
 
-        <x-form.field name="access_expires_at" label="Access ends on" class="sm:col-span-2"
+        <x-form.field name="tracking_quota" label="Tracking numbers this account may raise"
+                      help="How many shipments a customer representative may create in total. Raise it when they ask. A master admin is never limited, whatever this says.">
+            <input type="number" id="tracking_quota" name="tracking_quota" min="0" max="10000"
+                   value="{{ old('tracking_quota', $staff->tracking_quota ?? 5) }}" class="input">
+            @if ($staff->exists && $staff->isRepresentative())
+                <p class="help">Used {{ $staff->trackingUsed() }} of {{ $staff->tracking_quota }}.</p>
+            @endif
+        </x-form.field>
+
+        <x-form.field name="access_expires_at" label="Access ends on"
                       help="How long this account may use the panel. It is suspended automatically once the date passes, and sees a notice asking them to contact you. Leave empty for an account that does not expire.">
             <input type="date" id="access_expires_at" name="access_expires_at"
                    value="{{ old('access_expires_at', $staff->access_expires_at?->toDateString()) }}"

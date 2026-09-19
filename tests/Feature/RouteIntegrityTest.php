@@ -51,4 +51,32 @@ class RouteIntegrityTest extends TestCase
 
         $this->assertSame(array_unique($names), $names, 'Duplicate route names would make route() ambiguous.');
     }
+
+    /**
+     * Every public route that does real work — a database write, a file read,
+     * a lookup by a guessable identifier — must be rate limited. A page that
+     * only renders static copy does not need it.
+     */
+    public function test_every_working_public_route_is_rate_limited(): void
+    {
+        $exempt = [
+            'home', 'about', 'services.index', 'services.show', 'faq', 'reviews',
+            'quote.create', 'contact.create', 'privacy', 'terms', 'pages.show',
+            'sitemap', 'robots', 'track.index',
+            'admin.login', 'admin.password.request', 'admin.password.reset',
+            'admin.login.challenge',
+        ];
+
+        $unprotected = collect(Route::getRoutes()->getRoutes())
+            ->filter(fn ($route) => ! in_array('auth', $route->gatherMiddleware(), true))
+            ->filter(fn ($route) => $route->getName() !== null && $route->uri() !== 'up')
+            ->reject(fn ($route) => in_array($route->getName(), $exempt, true))
+            ->reject(fn ($route) => collect($route->gatherMiddleware())
+                ->contains(fn ($m) => is_string($m) && str_starts_with($m, 'throttle:')))
+            ->map(fn ($route) => $route->getName().'  ['.$route->uri().']')
+            ->values()
+            ->all();
+
+        $this->assertSame([], $unprotected, "these public routes have no rate limit:\n  ".implode("\n  ", $unprotected));
+    }
 }
