@@ -2,6 +2,9 @@
 
 @php
     $paths = [
+        'train' => '<rect x="5" y="4" width="14" height="12" rx="2"/><path d="M5 10h14"/><path d="M8 20l-2 2M16 20l2 2"/><circle cx="9" cy="13.5" r="1"/><circle cx="15" cy="13.5" r="1"/><path d="M7 16h10"/>',
+        'home' => '<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
+        'flag' => '<path d="M5 21V4"/><path d="M5 5h11l-2 3.5L16 12H5z"/>',
         'container' => '<path d="M3 7h18v11H3z"/><path d="M7 7v11M11 7v11M15 7v11M19 7v11"/><path d="M2 18h20"/>',
         'vessel' => '<path d="M3 17l1.6-5.2a1 1 0 0 1 .96-.8H18.4a1 1 0 0 1 .96.8L21 17"/><path d="M7 11V7h8v4"/><path d="M11 7V4h2v3"/><path d="M2 20c1.6 0 1.6-1.2 3.2-1.2S6.8 20 8.4 20s1.6-1.2 3.2-1.2S13.2 20 14.8 20s1.6-1.2 3.2-1.2S19.6 20 21.2 20"/>',
         'aircraft' => '<path d="M10.5 20.5 12 15l7.5-2.2a2 2 0 0 0-.6-3.9L14 9.5 9.5 3.5h-2l2.2 6.6-4 1.1-2-2.2H2l1.6 3.8L2 16.6h1.7l2-2.2 4 1.1L7.5 22h2z"/>',

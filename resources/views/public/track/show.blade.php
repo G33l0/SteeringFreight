@@ -2,6 +2,8 @@
     @php
         $status = $shipment->status;
         $progress = $shipment->progressPercent();
+        $showStages = (bool) setting('tracking.show_stages', false);
+        $showPercentage = (bool) setting('tracking.show_percentage', false);
         $details = collect([
             'Origin' => $shipment->originLabel(),
             'Destination' => $shipment->destinationLabel(),
@@ -68,23 +70,18 @@
             </div>
 
             <div class="mt-8">
-                <div class="flex items-center justify-between text-sm">
-                    <p class="font-medium text-ink-700">Shipment progress</p>
-                    <p class="text-ink-500">{{ $progress }}%</p>
-                </div>
-                <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-ink-200" role="progressbar"
-                     aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"
-                     aria-label="Shipment progress">
-                    <div class="h-full rounded-full bg-accent-600 transition-[width] duration-500" style="width: {{ max($progress, 2) }}%"></div>
-                </div>
+                @if ($showPercentage)
+                    <p class="mb-1 text-right text-sm text-ink-500">{{ $progress }}%</p>
+                @endif
+                <x-tracking-journey :shipment="$shipment" />
             </div>
         </div>
     </section>
 
     <div class="mx-auto grid max-w-5xl gap-10 px-6 py-12 lg:grid-cols-[1.25fr_0.75fr]">
         <div class="space-y-10">
-            {{-- Milestones --}}
-            @if ($timeline->isNotEmpty())
+            {{-- Milestones. Operational detail, off unless the business turns it on. --}}
+            @if ($showStages && $timeline->isNotEmpty())
                 <section>
                     <h2 class="font-display text-lg font-semibold">Shipment stages</h2>
                     <ol class="mt-5 space-y-0">

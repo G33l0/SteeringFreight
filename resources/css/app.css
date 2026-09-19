@@ -310,3 +310,14 @@
         background-color: var(--color-ink-50);
     }
 }
+
+/*
+ * The vehicle on the tracking rail rides very slightly, which reads as motion
+ * without becoming a distraction on a page somebody is reading for facts. It
+ * is applied with a motion-safe: prefix, so it does not play for anyone who has
+ * asked their system for reduced motion.
+ */
+@keyframes journey-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}

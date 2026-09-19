@@ -60,6 +60,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   the site prints one line ("Every day / 24 hours") instead of three identical rows, and
   `sentence()` is the phrase for the places that write it into prose. No view reads the
   three hour settings directly.
+- The tracking page answers "where is my cargo" with a picture. `x-tracking-journey` draws a
+  rail with the vehicle sitting at the point reached; `TrackingIcons::vehicleFor()` picks it
+  (ship, aircraft, train, van) and draws a van for any shipment whose origin and destination
+  country match, because that is the leg the customer can picture.
+  `TrackingIcons::forStatus()` gives each status a drawing that carries its meaning, so a
+  customs hold reads differently from a weather delay. All SVG, never emoji. The stage
+  checklist and the raw percentage are operational detail, off for customers behind
+  `tracking.show_stages` and `tracking.show_percentage`; staff always see both in the panel.
 - The public site has no staff login link and no utility strip above the header: the branded
   header is the first thing on the page, and the homepage tab is the company name alone.
 - The customer chat is a window, not a record. It accepts no files at all, and a conversation
