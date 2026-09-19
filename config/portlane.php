@@ -136,6 +136,19 @@ return [
         // while the certificate is being proved — and raise it to a year once
         // HTTPS is known to be working and renewing. Set to 0 to send nothing.
         'hsts_max_age' => max(0, (int) env('HSTS_MAX_AGE', 31536000)),
+
+        // Content Security Policy. 'enforce' blocks anything it disallows,
+        // 'report' only complains in the browser console, 'off' sends nothing.
+        //
+        // The policy allows 'unsafe-eval' because Alpine evaluates the x-data
+        // and @click expressions in the markup, and without it every dropdown,
+        // the mobile menu and the chat polling stop working. That is a real
+        // weakening and worth naming: what the policy still buys is that no
+        // script can be loaded from another origin and no injected <script>
+        // block will run, which is how cross-site scripting normally arrives.
+        // Closing the eval gap means moving to Alpine's CSP build and
+        // rewriting every inline expression as a registered component.
+        'csp' => env('SECURITY_CSP', 'enforce'),
     ],
 
     /*

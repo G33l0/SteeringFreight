@@ -77,6 +77,14 @@ tracking, and an admin panel where staff manage shipments, customers and site co
   keeps a thread alive; `scopeWithinRetention()` is the matching query scope. Message bodies
   are never copied into notification emails or the audit log, and the audit descriptions
   reference the tracking number rather than the customer's name.
+- `SetSecurityHeaders` sends the security headers, including HSTS (only over a secure
+  connection) and a Content Security Policy. The policy allows `'unsafe-eval'` because
+  Alpine evaluates the expressions written in the markup, and `'unsafe-inline'` for styles
+  because the brand colours are an inline block — both are named in the code and asserted in
+  a test, so nobody believes the policy is stricter than it is. `SECURITY_CSP=report`
+  introduces it on a live site without blocking anything.
+- Every public route that does real work is rate limited, and `RouteIntegrityTest` fails if
+  a new one is added without a limiter.
 - Every administrative write is recorded through `AuditLogger`. Never log credentials:
   `changes()` records which fields changed, never their values, and `redact()` masks
   sensitive keys.
